@@ -1,11 +1,12 @@
 import axios from "axios";
 
-const API_URL = import.meta.env.VITE_API_URL;
+const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8000/api";
 
 export const login = async (email: string, password: string) => {
     try {
         const response = await axios.post(`${API_URL}/login`, { email, password });
-        const token = response.data.token;
+        console.log("Login exitoso:", response.data);
+        const token = response.data.access_token;
         localStorage.setItem("token", token); 
         return response.data;
     } catch (error) {
@@ -15,9 +16,9 @@ export const login = async (email: string, password: string) => {
 };
 
 
-export const register = async (name: string, email: string, password: string) => {
+export const register = async (name: string, email: string, password: string, role: string) => {
     try {
-        const response = await axios.post(`${API_URL}/register`, { name, email, password });
+        const response = await axios.post(`${API_URL}/register`, { name, email, password, role });
         return response.data;
     } catch (error) {
         console.error("Error al registrar usuario:", error);
