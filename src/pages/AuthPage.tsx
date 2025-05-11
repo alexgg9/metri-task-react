@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { login, register } from "../services/authService";
-import { ChevronLeft, Mail, Lock, User, Eye, EyeOff } from "lucide-react";
+import { FiUser, FiEye, FiMail, FiLock, FiEyeOff, FiChevronLeft  } from 'react-icons/fi';
+import { useNavigate } from "react-router-dom"; 
 
 export default function AuthForms() {
   const [isLogin, setIsLogin] = useState(true);
@@ -12,6 +13,8 @@ export default function AuthForms() {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+
+  const navigate = useNavigate();
 
   const resetFields = () => {
     setName("");
@@ -30,8 +33,10 @@ export default function AuthForms() {
 
     try {
       if (isLogin) {
+        // Intentar hacer login
         await login(email, password);
         console.log("Login exitoso");
+        navigate("/projects"); 
       } else {
         if (password !== confirmPassword) {
           setError("Las contraseñas no coinciden");
@@ -72,7 +77,7 @@ export default function AuthForms() {
           {!isLogin && (
             <>
               <InputWithIcon
-                icon={<User size={18} />}
+                icon={<FiUser size={18} />}
                 id="name"
                 label="Nombre completo"
                 type="text"
@@ -100,7 +105,7 @@ export default function AuthForms() {
           )}
 
           <InputWithIcon
-            icon={<Mail size={18} />}
+            icon={<FiMail size={18} />}
             id="email"
             label="Correo electrónico"
             type="email"
@@ -110,7 +115,7 @@ export default function AuthForms() {
           />
 
           <InputWithIcon
-            icon={<Lock size={18} />}
+            icon={<FiLock size={18} />}
             id="password"
             label="Contraseña"
             type={showPassword ? "text" : "password"}
@@ -119,14 +124,14 @@ export default function AuthForms() {
             placeholder="Introducir tu contraseña"
             suffix={
               <button type="button" onClick={() => setShowPassword(!showPassword)}>
-                {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                {showPassword ? <FiEyeOff size={18} /> : <FiEye size={18} />}
               </button>
             }
           />
 
           {!isLogin && (
             <InputWithIcon
-              icon={<Lock size={18} />}
+              icon={<FiLock size={18} />}
               id="confirm-password"
               label="Confirmar contraseña"
               type={showPassword ? "text" : "password"}
@@ -169,7 +174,7 @@ export default function AuthForms() {
               }}
               className="flex items-center justify-center mx-auto text-indigo-600 hover:underline gap-1"
             >
-              <ChevronLeft size={16} />
+              <FiChevronLeft size={16} />
               Volver al inicio de sesión
             </button>
           )}

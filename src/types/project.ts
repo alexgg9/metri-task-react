@@ -5,11 +5,23 @@ export interface Project {
   id: number;
   name: string;
   description: string;
-  startDate: string; 
-  endDate: string;  
+  start_date: string; 
+  end_date: string;  
   status: 'active' | 'completed' | 'in progress'; 
   priority: 'low' | 'medium' | 'high';
   progress: number;
-  created_by: User;
-  tasks: Task[];
+  user_id: number;
+  created_at: string;
+  updated_at: string;
+  tasks?: Task[];
+  users?: User[];
+  creator?: User;
 }
+
+export const PROJECT_ROLES = {
+  ADMIN: 'admin',
+  MANAGER: 'manager',
+  MEMBER: 'member'
+} as const;
+
+export type ProjectRole = typeof PROJECT_ROLES[keyof typeof PROJECT_ROLES];

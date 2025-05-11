@@ -1,8 +1,9 @@
 import axios from "axios";
 import { Project } from "../types/project";
+import { Task } from "../types/task";
 
-const API_URL = import.meta.env.VITE_API_URL;
-const token = () => localStorage.getItem("token");
+const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8000/api"; 
+const token = () => localStorage.getItem("token"); 
 
 export const getProjects = async (): Promise<Project[]> => {
     try {
@@ -16,6 +17,18 @@ export const getProjects = async (): Promise<Project[]> => {
     }
 };
 
+export const getProjectById = async (id: number): Promise<Project | null> => {
+    try {
+        const response = await axios.get(`${API_URL}/projects/${id}`, {
+            headers: { Authorization: `Bearer ${token()}` },
+        });
+        return response.data;
+    } catch (error) {
+        console.error(`Error al obtener el proyecto con ID ${id}:`, error);
+        return null;
+    }
+};
+
 export const createProject = async (data: Partial<Project>) => {
     try {
         const response = await axios.post(`${API_URL}/projects`, data, {
@@ -24,7 +37,7 @@ export const createProject = async (data: Partial<Project>) => {
         return response.data;
     } catch (error) {
         console.error("Error al crear el proyecto:", error);
-        throw error; 
+        throw error;
     }
 };
 
@@ -49,5 +62,17 @@ export const deleteProject = async (id: number) => {
     } catch (error) {
         console.error("Error al eliminar el proyecto:", error);
         throw error;
+    }
+};
+
+export const getProjectTasks = async (projectId: number): Promise<Task[]> => {
+    try {
+        const response = await axios.get(`${API_URL}/projects/${projectId}/tasks`, {
+            headers: { Authorization: `Bearer ${token()}` },
+        });
+        return response.data;
+    } catch (error) {
+        console.error(`Error al obtener tareas del proyecto ${projectId}:`, error);
+        return [];
     }
 };

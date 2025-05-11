@@ -7,7 +7,7 @@ export interface Task {
     description: string;
     dueDate: string; 
     comments: string; 
-    status: 'pending' | 'in-_rogress' | 'completed';
+    status: 'pending' | 'in_progress' | 'completed';
     priority: 'low' | 'medium' | 'high';
     assigned_to: User;
     created_by: User;        

@@ -10,3 +10,14 @@ export interface User {
     role: 'admin' | 'manager' | 'member';
 
 }
+
+export interface UserUpdate {
+    name?: string;
+    email?: string;
+    password: string; 
+    newPassword?: string; 
+    phone?: string;
+    address?: string;
+    birthdate?: string;
+    avatar?: string;
+}
