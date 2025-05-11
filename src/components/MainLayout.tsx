@@ -32,7 +32,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
         zIndex={10}
         transition="width 0.2s"
       >
-        <Sidebar  />
+        <Sidebar collapsed={collapsed} />
       </Box>
       
       {/* Contenido principal con topbar fijo */}
