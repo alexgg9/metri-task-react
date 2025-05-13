@@ -1,34 +1,22 @@
 import React, { useEffect, useState } from 'react';
 import {
-  Box,
   Container,
-  Flex,
-  FormControl,
-  FormLabel,
-  Heading,
-  Input,
-  Avatar,
-  Text,
   useToast,
-  Divider,
-  Card,
-  CardBody,
-  IconButton,
-  useColorModeValue,
-  InputGroup,
-  InputRightElement,
-  HStack,
-  Badge,
-  Tabs,
-  TabList,
-  Tab,
-  TabPanels,
-  TabPanel,
-  SimpleGrid
+  Center,
+  Spinner,
+  Text,
+  Grid,
+  GridItem,
+  VStack
 } from '@chakra-ui/react';
-import { FiEdit, FiSave, FiX, FiEye, FiEyeOff, FiUser, FiMail } from 'react-icons/fi';
-import { getCurrentUser, updateUser } from '../../services/userService';
+import { getCurrentUser } from '../../services/userService';
+import { getProjects } from '../../services/projectService';
+import { getTasks } from '../../services/taskService';
 import { User, UserUpdate } from '@/types/user';
+import { Project } from '@/types/project';
+import UserProfileCard from './UserProfileCard';
+import UserInfoForm from './UserInfoForm';
+import UserStatsCard from './UserStatsCard';
 
 const ProfileUser: React.FC = () => {
   const [user, setUser] = useState<User | null>(null);
@@ -37,13 +25,13 @@ const ProfileUser: React.FC = () => {
     password: '' 
   });
   const [isLoading, setIsLoading] = useState(false);
-  const [showPassword, setShowPassword] = useState(false);
+  const [userStats, setUserStats] = useState({
+    projectsCompleted: 0,
+    tasksCompleted: 0,
+    projectsInProgress: 0,
+    joinDate: ''
+  });
   const toast = useToast();
-  
-  const cardBg = useColorModeValue('white', 'gray.700');
-  const textColor = useColorModeValue('gray.600', 'gray.300');
-  const inputBgReadOnly = useColorModeValue('gray.50', 'gray.600');
-  const borderColor = useColorModeValue('gray.200', 'gray.600');
 
   useEffect(() => {
     const fetchUserData = async () => {
@@ -51,6 +39,15 @@ const ProfileUser: React.FC = () => {
         const userData = await getCurrentUser();
         setUser(userData);
         setFormData(userData);
+        
+        const joinDate = new Date(userData.created_at || Date.now());
+        const formattedDate = joinDate.toLocaleDateString('es-ES', {
+          day: '2-digit',
+          month: 'short',
+          year: 'numeric'
+        });
+        
+        await fetchUserStats(userData.id, formattedDate);
       } catch (error) {
         console.error('Error al obtener datos del usuario:', error);
         toast({
@@ -66,288 +63,138 @@ const ProfileUser: React.FC = () => {
     fetchUserData();
   }, [toast]);
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setFormData({
-      ...formData,
-      [name]: value,
-    });
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (!formData.password) {
-      toast({
-        title: 'Contraseña requerida',
-        description: 'Debes ingresar tu contraseña para actualizar el perfil',
-        status: 'warning',
-        duration: 3000,
-        isClosable: true,
-      });
-      return;
-    }
-    
-    setIsLoading(true);
-
+  
+  const fetchUserStats = async (userId: number, joinDate: string) => {
     try {
-      if (user && user.id) {
-        await updateUser(user.id, formData);
-        
-        const { password, ...userDataWithoutPassword } = formData;
-        setUser({...user, ...userDataWithoutPassword});
-        
-        setIsEditing(false);
-        toast({
-          title: 'Perfil actualizado',
-          description: 'Los datos de tu perfil se han actualizado correctamente',
-          status: 'success',
-          duration: 3000,
-          isClosable: true,
-        });
-        
-        // Limpiar la contraseña del formulario
-        setFormData(prev => ({ ...prev, password: '' }));
-      }
-    } catch (error) {
-      console.error('Error al actualizar el perfil:', error);
-      toast({
-        title: 'Error',
-        description: 'No se pudo actualizar el perfil. Verifica que la contraseña sea correcta.',
-        status: 'error',
-        duration: 3000,
-        isClosable: true,
+      const projects: Project[] = await getProjects();
+      
+      // More inclusive filtering to capture all user projects
+      const userProjects = Array.isArray(projects) 
+        ? projects.filter(project => 
+            // Check if user is in project.users array
+            (project.users && project.users.some(u => u.id === userId)) ||
+            // Or if user is the creator
+            (project.creator && project.creator.id === userId) ||
+            // Or if project.user_id matches userId
+            project.user_id === userId
+          )
+        : [];
+      
+      console.log("Proyectos del usuario (filtrado mejorado):", userProjects); 
+      
+      // Rest of your code remains the same
+      const completedProjects = userProjects.filter(project => 
+        project.status && (
+          project.status.toLowerCase().includes('complet') || 
+          project.status.toLowerCase().includes('done') || 
+          project.status.toLowerCase().includes('termin')
+        )
+      ).length;
+      
+      const inProgressProjects = userProjects.length - completedProjects;
+  
+      const tasksResponse = await getTasks();
+      const tasks = Array.isArray(tasksResponse) ? tasksResponse : [];
+      
+
+      const userTasks = tasks.filter(task => 
+        (task && task.assigned_to && task.assigned_to.id === userId) ||
+        (task && task.created_by.id === userId) ||
+        (task && task.created_by.id && task.created_by.id === userId)
+      );
+      
+      console.log("Tareas del usuario (filtrado mejorado):", userTasks);
+      
+
+      const completedTasks = userTasks.filter(task => 
+        task.status && (
+          task.status.toLowerCase().includes('complet') || 
+          task.status.toLowerCase().includes('done') || 
+          task.status.toLowerCase().includes('termin')
+        )
+      ).length;
+      
+      const totalProjects = userProjects.length;
+      const totalTasks = userTasks.length;
+      const pendingTasks = totalTasks - completedTasks;
+      
+      setUserStats({
+        projectsCompleted: completedProjects,
+        tasksCompleted: completedTasks,
+        projectsInProgress: inProgressProjects,
+        joinDate: joinDate,
       });
-    } finally {
-      setIsLoading(false);
+      
+      console.log("Estadísticas calculadas (mejoradas):", {
+        totalProjects,
+        projectsCompleted: completedProjects,
+        projectsInProgress: inProgressProjects,
+        totalTasks,
+        tasksCompleted: completedTasks,
+        pendingTasks
+      });
+      
+    } catch (error) {
+      console.error('Error al obtener estadísticas:', error);
+      setUserStats(prev => ({
+        ...prev,
+        joinDate: joinDate
+      }));
     }
   };
 
-  const handleCancel = () => {
-    setFormData({...user, password: ''});
-    setIsEditing(false);
+  const handleUserUpdate = (updatedUser: User) => {
+    setUser(updatedUser);
   };
-
-  const togglePasswordVisibility = () => setShowPassword(!showPassword);
 
   if (!user) {
     return (
-      <Container maxW="container.md" py={10}>
-        <Card variant="outline" bg={cardBg} shadow="md">
-          <CardBody>
-            <Flex justify="center" align="center" h="200px">
-              <Text fontSize="lg">Cargando datos del usuario...</Text>
-            </Flex>
-          </CardBody>
-        </Card>
+      <Container maxW="container.lg" py={10}>
+        <Center h="50vh" flexDirection="column" gap={4}>
+          <Spinner 
+            thickness="4px"
+            speed="0.65s"
+            emptyColor="gray.200"
+            color="blue.500"
+            size="xl"
+          />
+          <Text fontSize="lg" color="gray.500" mt={2}>
+            Cargando perfil...
+          </Text>
+        </Center>
       </Container>
     );
   }
 
-  const getRoleBadge = (role: string) => {
-    let color;
-    switch(role) {
-      case 'admin':
-        color = 'red';
-        break;
-      case 'manager':
-        color = 'purple';
-        break;
-      case 'member':
-        color = 'green';
-        break;
-      default:
-        color = 'gray';
-    }
-    
-    return (
-      <Badge colorScheme={color} px={2} py={1} borderRadius="md">
-        {role === 'admin' ? 'Administrador' : 
-         role === 'manager' ? 'Manager' :
-         role === 'member' ? 'Miembro' : role}
-      </Badge>
-    );
-  };
-
   return (
-    <Container maxW="container.md" py={10}>
-      <Tabs variant="soft-rounded" colorScheme="blue" mb={6}>
-        <TabList>
-          <Tab>Perfil</Tab>
-          <Tab>Preferencias</Tab>
-        </TabList>
+    <Container maxW="container.lg" py={8}>
+      <Grid templateColumns={{ base: "1fr", lg: "300px 1fr" }} gap={6}>
+        <GridItem>
+          <VStack spacing={6} align="stretch">
+            <UserProfileCard 
+              user={user} 
+              joinDate={userStats.joinDate} 
+            />
+            
+            <UserStatsCard 
+              stats={userStats}
+            />
+          </VStack>
+        </GridItem>
         
-        <TabPanels mt={4}>
-          <TabPanel p={0}>
-            <Card mb={6} variant="outline" bg={cardBg} shadow="md" overflow="hidden">
-              <Box 
-                h="100px" 
-                bg="blue.500" 
-                position="relative"
-              />
-              <CardBody pt={0} mt={-50}>
-                <Flex direction={{ base: 'column', md: 'row' }} align="center" gap={6}>
-                  <Avatar 
-                    size="2xl" 
-                    name={user.name} 
-                    src={user.avatar} 
-                    bg="blue.500"
-                    border="4px solid white"
-                    mb={{ base: 2, md: 0 }}
-                  />
-                  <Box flex={1}>
-                    <Heading size="lg" mb={2}>{user.name}</Heading>
-                    <HStack spacing={2} mb={2}>
-                      <FiMail />
-                      <Text color={textColor}>{user.email}</Text>
-                    </HStack>
-                    {user.role && (
-                      <HStack spacing={2}>
-                        <FiUser />
-                        {getRoleBadge(user.role)}
-                      </HStack>
-                    )}
-                  </Box>
-                  {!isEditing && (
-                    <IconButton
-                      aria-label="Editar perfil"
-                      icon={<FiEdit />}
-                      onClick={() => setIsEditing(true)}
-                      colorScheme="blue"
-                      variant="outline"
-                    />
-                  )}
-                </Flex>
-              </CardBody>
-            </Card>
-
-            <Card variant="outline" bg={cardBg} shadow="md">
-              <CardBody>
-                <Flex justify="space-between" align="center" mb={4}>
-                  <Heading size="md">Información personal</Heading>
-                  {isEditing && (
-                    <HStack spacing={2}>
-                      <IconButton
-                        aria-label="Cancelar"
-                        icon={<FiX />}
-                        onClick={handleCancel}
-                        colorScheme="red"
-                        variant="outline"
-                        size="sm"
-                      />
-                      <IconButton
-                        aria-label="Guardar"
-                        icon={<FiSave />}
-                        onClick={handleSubmit}
-                        colorScheme="green"
-                        isLoading={isLoading}
-                        size="sm"
-                      />
-                    </HStack>
-                  )}
-                </Flex>
-                
-                <Divider mb={6} />
-                
-                <form onSubmit={handleSubmit}>
-                  <SimpleGrid columns={{ base: 1, md: 2 }} spacing={6}>
-                    <FormControl>
-                      <FormLabel>Nombre</FormLabel>
-                      <InputGroup>
-                        <Input
-                          name="name"
-                          value={formData.name || ''}
-                          onChange={handleInputChange}
-                          readOnly={!isEditing}
-                          bg={!isEditing ? inputBgReadOnly : undefined}
-                          borderColor={borderColor}
-                          _hover={isEditing ? { borderColor: 'blue.300' } : undefined}
-                        />
-                      </InputGroup>
-                    </FormControl>
-                    
-                    <FormControl>
-                      <FormLabel>Correo electrónico</FormLabel>
-                      <Input
-                        name="email"
-                        value={formData.email || ''}
-                        onChange={handleInputChange}
-                        readOnly={!isEditing}
-                        bg={!isEditing ? inputBgReadOnly : undefined}
-                        borderColor={borderColor}
-                        _hover={isEditing ? { borderColor: 'blue.300' } : undefined}
-                      />
-                    </FormControl>
-                    
-                    <FormControl>
-                      <FormLabel>Teléfono</FormLabel>
-                      <InputGroup>
-                        <Input
-                          name="phone"
-                          value={formData.phone || ''}
-                          onChange={handleInputChange}
-                          readOnly={!isEditing}
-                          bg={!isEditing ? inputBgReadOnly : undefined}
-                          borderColor={borderColor}
-                          _hover={isEditing ? { borderColor: 'blue.300' } : undefined}
-                        />
-                      </InputGroup>
-                    </FormControl>
-                    
-                    <FormControl>
-                      <FormLabel>Dirección</FormLabel>
-                      <Input
-                        name="address"
-                        value={formData.address || ''}
-                        onChange={handleInputChange}
-                        readOnly={!isEditing}
-                        bg={!isEditing ? inputBgReadOnly : undefined}
-                        borderColor={borderColor}
-                        _hover={isEditing ? { borderColor: 'blue.300' } : undefined}
-                      />
-                    </FormControl>
-                    
-                    {isEditing && (
-                      <FormControl gridColumn={{ md: 'span 2' }}>
-                        <FormLabel>Contraseña actual (requerida para guardar cambios)</FormLabel>
-                        <InputGroup>
-                          <Input
-                            name="password"
-                            type={showPassword ? 'text' : 'password'}
-                            value={formData.password || ''}
-                            onChange={handleInputChange}
-                            borderColor={borderColor}
-                            _hover={{ borderColor: 'blue.300' }}
-                          />
-                          <InputRightElement>
-                            <IconButton
-                              aria-label={showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}
-                              icon={showPassword ? <FiEyeOff /> : <FiEye />}
-                              onClick={togglePasswordVisibility}
-                              variant="ghost"
-                              size="sm"
-                            />
-                          </InputRightElement>
-                        </InputGroup>
-                      </FormControl>
-                    )}
-                  </SimpleGrid>
-                </form>
-              </CardBody>
-            </Card>
-          </TabPanel>
-          
-          <TabPanel>
-            <Card variant="outline" bg={cardBg} shadow="md">
-              <CardBody>
-                <Heading size="md" mb={4}>Preferencias de usuario</Heading>
-                <Divider mb={6} />
-                <Text color={textColor}>Las preferencias de usuario estarán disponibles próximamente.</Text>
-              </CardBody>
-            </Card>
-          </TabPanel>
-        </TabPanels>
-      </Tabs>
+        <GridItem>
+          <UserInfoForm
+            user={user}
+            formData={formData}
+            setFormData={setFormData}
+            isEditing={isEditing}
+            setIsEditing={setIsEditing}
+            isLoading={isLoading}
+            setIsLoading={setIsLoading}
+            onUserUpdate={handleUserUpdate}
+          />
+        </GridItem>
+      </Grid>
     </Container>
   );
 };

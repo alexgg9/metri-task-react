@@ -9,6 +9,7 @@ import AuthPage from './pages/AuthPage';
 import Sidebar from './components/Sidebar';
 import Topbar from './components/Topbar';
 import { Box, Flex } from '@chakra-ui/react';
+import ProfileUser from './components/user/ProfileUser';
 
 const MainLayout: React.FC = () => {
   const [collapsed, setCollapsed] = useState(false);
@@ -33,7 +34,7 @@ const MainLayout: React.FC = () => {
         />
         
         <Box p={4}>
-          <Outlet /> {/* Aquí se renderizarán las rutas hijas */}
+          <Outlet /> 
         </Box>
       </Box>
     </Flex>
@@ -58,7 +59,7 @@ const App: React.FC = () => {
         <Route path="projects/new" element={<CreateProject />} />
         <Route path="projects/:projectId" element={<ProjectDetail />} />
         <Route path="projects/:projectId/kanban" element={<KanbanBoardWrapper />} />
-        <Route path="profile" element={<div>Página de Perfil</div>} /> {/* Añadir ruta de perfil */}
+        <Route path="profile" element={<ProfileUser />} /> 
       </Route>
     </Routes>
   );

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
   Card, 
@@ -29,12 +29,53 @@ interface ProjectCardProps {
 
 const ProjectCard: React.FC<ProjectCardProps> = ({ project }) => {
   const navigate = useNavigate();
+  const [displayStatus, setDisplayStatus] = useState(translateStatus(project.status));
+  
   const cardBg = useColorModeValue('white', 'gray.700');
   const cardShadow = useColorModeValue('md', 'dark-lg');
   const accentColor = useColorModeValue('blue.500', 'blue.300');
   const textColor = useColorModeValue('gray.600', 'gray.300');
   const borderColor = useColorModeValue('gray.100', 'gray.600');
   const progressBg = useColorModeValue('gray.100', 'gray.600');
+
+
+  useEffect(() => {
+    if (project.progress === 100 && 
+        !['completado', 'completed'].includes(project.status.toLowerCase())) {
+      setDisplayStatus('Completado');
+    } else if (project.progress < 100 && 
+              ['completado', 'completed'].includes(project.status.toLowerCase())) {
+      setDisplayStatus('En progreso');
+    }
+  }, [project.progress, project.status]);
+
+  function translateStatus(status: string): string {
+    switch (status.toLowerCase()) {
+      case 'completed':
+        return 'Completado';
+      case 'in progress':
+        return 'En progreso';
+      case 'pending':
+        return 'Pendiente';
+      case 'cancelled':
+        return 'Cancelado';
+      default:
+        return status;
+    }
+  }
+
+  function translatePriority(priority: string): string {
+    switch (priority.toLowerCase()) {
+      case 'high':
+        return 'Alta';
+      case 'medium':
+        return 'Media';
+      case 'low':
+        return 'Baja';
+      default:
+        return priority;
+    }
+  }
 
   const getStatusColor = (status: string) => {
     switch (status.toLowerCase()) {
@@ -104,7 +145,7 @@ const ProjectCard: React.FC<ProjectCardProps> = ({ project }) => {
         position="relative"
         h="100%"
       >
-        {/* Barra de color superior según estado */}
+
         <Box 
           position="absolute" 
           top={0} 
@@ -133,7 +174,7 @@ const ProjectCard: React.FC<ProjectCardProps> = ({ project }) => {
                 fontSize="xs"
                 textTransform="capitalize"
               >
-                {project.status}
+                {displayStatus}
               </Badge>
             </Flex>
             
@@ -181,7 +222,7 @@ const ProjectCard: React.FC<ProjectCardProps> = ({ project }) => {
                   borderRadius="full"
                   fontSize="xs"
                 >
-                  Prioridad: {project.priority}
+                  Prioridad: {translatePriority(project.priority)}
                 </Badge>
               </Flex>
             )}
