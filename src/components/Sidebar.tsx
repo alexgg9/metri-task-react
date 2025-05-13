@@ -7,6 +7,9 @@ import {
   Text,
   Heading,
   Icon,
+  useColorModeValue,
+  Tooltip,
+  Divider
 } from '@chakra-ui/react';
 import {
   FiHome,
@@ -20,9 +23,11 @@ interface SidebarProps {
 
 const Sidebar: React.FC<SidebarProps> = ({ collapsed }) => {
   const location = useLocation();
-  const primaryColor = 'blue.500';
-  const bgColor = 'white';
-  const borderColor = 'gray.200';
+  const primaryColor = useColorModeValue('blue.500', 'blue.300');
+  const bgColor = useColorModeValue('white', 'gray.800');
+  const borderColor = useColorModeValue('gray.200', 'gray.700');
+  const hoverBg = useColorModeValue('blue.50', 'blue.900');
+  const textColor = useColorModeValue('gray.700', 'gray.200');
   
   const sidebarWidth = collapsed ? '70px' : '200px';
   
@@ -71,39 +76,74 @@ const Sidebar: React.FC<SidebarProps> = ({ collapsed }) => {
         borderBottomColor={borderColor}
       >
         {collapsed ? (
-          <Icon as={FiHome} fontSize="20px" color={primaryColor} />
+          <Icon as={FiHome} fontSize="24px" color={primaryColor} />
         ) : (
           <Heading size="md" color={primaryColor}>MetriTask</Heading>
         )}
       </Flex>
 
+      <Divider borderColor={borderColor} display={collapsed ? "none" : "block"} />
+
       {/* Navigation Menu */}
-      <VStack gap={0} align="stretch" mt={2}>
+      <VStack gap={2} align="stretch" mt={4} px={2}>
         {menuItems.map((item) => {
+          const isActive = location.pathname === item.path;
           const CustomLink = React.forwardRef<HTMLAnchorElement>((props, ref) => (
             <Link to={item.path} ref={ref} {...props} />
           ));
           
           return (
-            <Box 
+            <Tooltip
               key={item.path}
-              as={CustomLink}
-              py={3}
-              px={collapsed ? 0 : 4}
-              display="flex"
-              alignItems="center"
-              justifyContent={collapsed ? "center" : "flex-start"}
-              bg={location.pathname === item.path ? 'blue.50' : 'transparent'}
-              color={location.pathname === item.path ? primaryColor : 'inherit'}
-              _hover={{
-                bg: 'gray.100',
-                textDecoration: 'none'
-              }}
-              transition="all 0.2s"
+              label={item.label}
+              placement="right"
+              isDisabled={!collapsed}
             >
-              <Icon as={item.icon} fontSize="18px" mr={collapsed ? 0 : 3} />
-              {!collapsed && <Text fontSize="sm">{item.label}</Text>}
-            </Box>
+              <Box 
+                as={CustomLink}
+                py={3}
+                px={collapsed ? 3 : 4}
+                display="flex"
+                alignItems="center"
+                justifyContent={collapsed ? "center" : "flex-start"}
+                bg={isActive ? hoverBg : 'transparent'}
+                color={isActive ? primaryColor : textColor}
+                borderRadius="lg"
+                position="relative"
+                _hover={{
+                  bg: hoverBg,
+                  transform: 'translateX(3px)',
+                  transition: 'all 0.2s'
+                }}
+                transition="all 0.2s"
+              >
+                {isActive && (
+                  <Box
+                    position="absolute"
+                    left={0}
+                    top={0}
+                    bottom={0}
+                    w="4px"
+                    bg={primaryColor}
+                    borderRightRadius="md"
+                  />
+                )}
+                <Icon 
+                  as={item.icon} 
+                  fontSize="20px" 
+                  mr={collapsed ? 0 : 3} 
+                  color={isActive ? primaryColor : textColor}
+                />
+                {!collapsed && (
+                  <Text 
+                    fontSize="sm" 
+                    fontWeight={isActive ? "semibold" : "medium"}
+                  >
+                    {item.label}
+                  </Text>
+                )}
+              </Box>
+            </Tooltip>
           );
         })}
       </VStack>

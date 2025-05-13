@@ -12,8 +12,12 @@ import {
   MenuItem,
   MenuDivider,
   IconButton,
+  useColorMode,
+  useColorModeValue,
+  Tooltip,
+  HStack,
 } from '@chakra-ui/react';
-import { FiMenu, FiX, FiUser, FiSettings, FiLogOut } from 'react-icons/fi';
+import { FiMenu, FiX, FiUser, FiSettings, FiLogOut, FiMoon, FiSun } from 'react-icons/fi';
 import { getCurrentUser } from '../services/userService';
 import { logout } from '../services/authService';
 
@@ -26,6 +30,16 @@ const Topbar: React.FC<TopbarProps> = ({ collapsed, toggleCollapsed }) => {
   const location = useLocation();
   const navigate = useNavigate();
   const [userName, setUserName] = useState<string>('Usuario');
+  const { colorMode, toggleColorMode } = useColorMode();
+  
+  // Colores dinámicos basados en el tema
+  const bgColor = useColorModeValue('white', 'gray.800');
+  const borderColor = useColorModeValue('gray.200', 'gray.700');
+  const textColor = useColorModeValue('gray.700', 'gray.200');
+  const breadcrumbColor = useColorModeValue('gray.600', 'gray.400');
+  const breadcrumbActiveColor = useColorModeValue('blue.500', 'blue.300');
+  const breadcrumbHoverColor = useColorModeValue('blue.600', 'blue.400');
+  const breadcrumbSeparatorColor = useColorModeValue('gray.400', 'gray.600');
 
   useEffect(() => {
     const fetchUserProfile = async () => {
@@ -63,12 +77,19 @@ const Topbar: React.FC<TopbarProps> = ({ collapsed, toggleCollapsed }) => {
     const pathSnippets = location.pathname.split('/').filter(Boolean);
 
     if (pathSnippets.length === 0) {
-      return <Text fontWeight="medium">Dashboard</Text>;
+      return <Text fontWeight="medium" color={textColor}>Dashboard</Text>;
     }
 
     return (
       <Flex align="center">
-        <Box as={Link} to="/" color="gray.600" _hover={{ color: 'blue.500' }}>
+        <Box 
+          as={Link} 
+          to="/" 
+          color={breadcrumbColor} 
+          _hover={{ color: breadcrumbHoverColor }}
+          fontWeight="medium"
+          fontSize="sm"
+        >
           Dashboard
         </Box>
         {pathSnippets.map((segment, index) => {
@@ -78,11 +99,18 @@ const Topbar: React.FC<TopbarProps> = ({ collapsed, toggleCollapsed }) => {
 
           return (
             <React.Fragment key={url}>
-              <Text mx={2} color="gray.400">/</Text>
+              <Text mx={2} color={breadcrumbSeparatorColor}>/</Text>
               {isLast ? (
-                <Text color="blue.500" fontWeight="medium">{name}</Text>
+                <Text color={breadcrumbActiveColor} fontWeight="semibold" fontSize="sm">{name}</Text>
               ) : (
-                <Box as={Link} to={url} color="gray.600" _hover={{ color: 'blue.500' }}>
+                <Box 
+                  as={Link} 
+                  to={url} 
+                  color={breadcrumbColor} 
+                  _hover={{ color: breadcrumbHoverColor }}
+                  fontWeight="medium"
+                  fontSize="sm"
+                >
                   {name}
                 </Box>
               )}
@@ -97,13 +125,14 @@ const Topbar: React.FC<TopbarProps> = ({ collapsed, toggleCollapsed }) => {
     <Box
       px={4}
       height="64px"
-      bg="white"
+      bg={bgColor}
       borderBottom="1px"
-      borderColor="gray.200"
+      borderColor={borderColor}
       position="sticky"
       top={0}
       zIndex={10}
       width="100%"
+      transition="all 0.2s"
     >
       <Flex height="100%" align="center" justify="space-between">
         {/* Botón de toggle + migas de pan */}
@@ -114,37 +143,88 @@ const Topbar: React.FC<TopbarProps> = ({ collapsed, toggleCollapsed }) => {
             variant="ghost"
             aria-label="Toggle Sidebar"
             mr={4}
+            color={textColor}
+            _hover={{ bg: useColorModeValue('gray.100', 'gray.700') }}
           />
           {renderBreadcrumbs()}
         </Flex>
 
-        {/* Menú de usuario */}
-        <Menu>
-          <MenuButton as={Button} variant="ghost" p={2}>
-            <Flex align="center">
-              <Avatar size="sm" name={userName} mr={2} />
-              <Text>{userName}</Text>
-            </Flex>
-          </MenuButton>
-          <MenuList>
-            <MenuItem 
-              icon={<FiUser />} 
-              as={Link} 
-              to="/profile"
+        {/* Acciones de usuario */}
+        <HStack spacing={2}>
+          {/* Botón de cambio de tema */}
+          <Tooltip label={colorMode === 'light' ? 'Modo oscuro' : 'Modo claro'}>
+            <IconButton
+              aria-label="Cambiar tema"
+              icon={colorMode === 'light' ? <FiMoon /> : <FiSun />}
+              onClick={toggleColorMode}
+              variant="ghost"
+              color={textColor}
+              _hover={{ bg: useColorModeValue('gray.100', 'gray.700') }}
+            />
+          </Tooltip>
+
+          {/* Menú de usuario */}
+          <Menu>
+            <MenuButton 
+              as={Button} 
+              variant="ghost" 
+              p={2}
+              _hover={{ bg: useColorModeValue('gray.100', 'gray.700') }}
+              borderRadius="md"
             >
-              Perfil
-            </MenuItem>
-            <MenuItem icon={<FiSettings />}>Configuración</MenuItem>
-            <MenuDivider />
-            <MenuItem 
-              icon={<FiLogOut />} 
-              color="red.500"
-              onClick={handleLogout}
+              <Flex align="center">
+                <Avatar 
+                  size="sm" 
+                  name={userName} 
+                  mr={2}
+                  bg={useColorModeValue('blue.500', 'blue.400')}
+                  color="white"
+                />
+                <Text color={textColor}>{userName}</Text>
+              </Flex>
+            </MenuButton>
+            <MenuList 
+              shadow="lg" 
+              borderRadius="md" 
+              py={2}
+              bg={bgColor}
+              borderColor={borderColor}
             >
-              Cerrar sesión
-            </MenuItem>
-          </MenuList>
-        </Menu>
+              <MenuItem 
+                icon={<FiUser />} 
+                as={Link} 
+                to="/profile"
+                _hover={{ bg: useColorModeValue('gray.100', 'gray.700') }}
+                borderRadius="md"
+                mx={2}
+                px={3}
+              >
+                Perfil
+              </MenuItem>
+              <MenuItem 
+                icon={<FiSettings />}
+                _hover={{ bg: useColorModeValue('gray.100', 'gray.700') }}
+                borderRadius="md"
+                mx={2}
+                px={3}
+              >
+                Configuración
+              </MenuItem>
+              <MenuDivider my={2} />
+              <MenuItem 
+                icon={<FiLogOut />} 
+                color="red.500"
+                onClick={handleLogout}
+                _hover={{ bg: useColorModeValue('red.50', 'red.900'), color: useColorModeValue('red.600', 'red.300') }}
+                borderRadius="md"
+                mx={2}
+                px={3}
+              >
+                Cerrar sesión
+              </MenuItem>
+            </MenuList>
+          </Menu>
+        </HStack>
       </Flex>
     </Box>
   );
