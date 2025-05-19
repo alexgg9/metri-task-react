@@ -25,7 +25,6 @@ import {
   FiCalendar, 
   FiClock, 
   FiFlag, 
-  FiUsers,
   FiFolder
 } from 'react-icons/fi';
 import { Project } from '@/types/project';

@@ -7,7 +7,6 @@ import {
   Text,
   Button,
   Spinner,
-  Tag,
   Modal,
   ModalOverlay,
   ModalContent,
