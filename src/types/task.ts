@@ -4,12 +4,16 @@ import { Project } from "./project";
 export interface Task {
     id: number;
     name: string;
-    description: string;
-    dueDate: string; 
-    comments: string; 
+    description?: string;
     status: 'pending' | 'in_progress' | 'completed';
     priority: 'low' | 'medium' | 'high';
-    assigned_to: User;
-    created_by: User;        
-    project: Project; 
+    dueDate?: string;
+    project_id: number;
+    assignee?: {
+        id: number;
+        name: string;
+    };
+    tags?: string[];
+    created_at?: string;
+    updated_at?: string;
 }

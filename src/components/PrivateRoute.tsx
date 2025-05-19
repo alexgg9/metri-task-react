@@ -1,15 +1,26 @@
 import React, { JSX } from 'react';
-import { Navigate } from 'react-router-dom';
+import { Navigate, useLocation } from 'react-router-dom';
+import { useAuth } from '../contexts/AuthContext';
 
 interface PrivateRouteProps {
   children: JSX.Element;
+  requiredPermission?: string;
 }
 
-const PrivateRoute: React.FC<PrivateRouteProps> = ({ children }) => {
-  const token = localStorage.getItem('token'); 
+const PrivateRoute: React.FC<PrivateRouteProps> = ({ children, requiredPermission }) => {
+  const { user, loading, hasPermission } = useAuth();
+  const location = useLocation();
 
-  if (!token) {
-    return <Navigate to="/login" replace />;
+  if (loading) {
+    return <div>Cargando...</div>;
+  }
+
+  if (!user) {
+    return <Navigate to="/auth" state={{ from: location }} replace />;
+  }
+
+  if (requiredPermission && !hasPermission(requiredPermission)) {
+    return <Navigate to="/unauthorized" replace />;
   }
 
   return children;

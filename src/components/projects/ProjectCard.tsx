@@ -1,27 +1,34 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { 
-  Card, 
-  CardBody,
-  Button, 
+import {
   GridItem,
-  useColorModeValue,
-  Box,
-  Flex,
-  Text,
+  Card,
+  CardBody,
+  VStack,
+  HStack,
   Heading,
+  Text,
   Badge,
   Progress,
-  HStack,
-  VStack,
+  Button,
+  useColorModeValue,
+  Box,
+  Icon,
+  Flex,
   Avatar,
   AvatarGroup,
-  Icon,
   Tooltip,
   Divider
 } from '@chakra-ui/react';
+import { 
+  FiArrowRight, 
+  FiCalendar, 
+  FiClock, 
+  FiFlag, 
+  FiUsers,
+  FiFolder
+} from 'react-icons/fi';
 import { Project } from '@/types/project';
-import { FiCalendar, FiClock, FiArrowRight, FiUsers, FiFlag } from 'react-icons/fi';
 
 interface ProjectCardProps {
   project: Project;
@@ -37,7 +44,7 @@ const ProjectCard: React.FC<ProjectCardProps> = ({ project }) => {
   const textColor = useColorModeValue('gray.600', 'gray.300');
   const borderColor = useColorModeValue('gray.100', 'gray.600');
   const progressBg = useColorModeValue('gray.100', 'gray.600');
-
+  const hoverBg = useColorModeValue('gray.50', 'gray.600');
 
   useEffect(() => {
     if (project.progress === 100 && 
@@ -145,7 +152,6 @@ const ProjectCard: React.FC<ProjectCardProps> = ({ project }) => {
         position="relative"
         h="100%"
       >
-
         <Box 
           position="absolute" 
           top={0} 
@@ -157,15 +163,18 @@ const ProjectCard: React.FC<ProjectCardProps> = ({ project }) => {
         
         <CardBody p={5} pt={6}>
           <VStack spacing={4} align="stretch">
-            {/* Encabezado con título y estado */}
-            <Flex justify="space-between" align="center">
-              <Heading 
-                size="md" 
-                color={useColorModeValue('gray.700', 'white')}
-                noOfLines={1}
-              >
-                {project.name}
-              </Heading>
+            <Flex justify="space-between" align="center" gap={3}>
+              <HStack spacing={3}>
+                <Icon as={FiFolder} color={accentColor} boxSize={5} />
+                <Heading 
+                  size="md" 
+                  color={useColorModeValue('gray.700', 'white')}
+                  isTruncated
+                  maxW="70%"
+                >
+                  {project.name}
+                </Heading>
+              </HStack>
               <Badge 
                 colorScheme={getStatusColor(project.status)}
                 px={2}
@@ -173,12 +182,12 @@ const ProjectCard: React.FC<ProjectCardProps> = ({ project }) => {
                 borderRadius="md"
                 fontSize="xs"
                 textTransform="capitalize"
+                ml="auto"
               >
                 {displayStatus}
               </Badge>
             </Flex>
             
-            {/* Descripción */}
             <Text 
               color={textColor} 
               fontSize="sm" 
@@ -190,7 +199,6 @@ const ProjectCard: React.FC<ProjectCardProps> = ({ project }) => {
             
             <Divider borderColor={borderColor} />
             
-            {/* Fechas */}
             <HStack spacing={4} justify="space-between">
               <Tooltip label="Fecha de inicio">
                 <Flex align="center">
@@ -211,8 +219,7 @@ const ProjectCard: React.FC<ProjectCardProps> = ({ project }) => {
               </Tooltip>
             </HStack>
             
-            {/* Prioridad */}
-            {project.priority && (
+            <HStack spacing={4} justify="space-between">
               <Flex align="center">
                 <Icon as={FiFlag} color={`${getPriorityColor(project.priority)}.500`} mr={2} />
                 <Badge 
@@ -225,49 +232,40 @@ const ProjectCard: React.FC<ProjectCardProps> = ({ project }) => {
                   Prioridad: {translatePriority(project.priority)}
                 </Badge>
               </Flex>
-            )}
+
+              {project.users && project.users.length > 0 && (
+                <Tooltip label="Miembros del equipo">
+                  <AvatarGroup size="xs" max={3}>
+                    {project.users.map((member, index) => (
+                      <Avatar 
+                        key={index} 
+                        name={member.name} 
+                        src={member.avatar} 
+                      />
+                    ))}
+                  </AvatarGroup>
+                </Tooltip>
+              )}
+            </HStack>
             
-            {/* Progreso */}
             <Box>
-            <Flex justify="space-between" mb={1}>
-              <Text fontSize="xs" fontWeight="medium" color={textColor}>
-                Progreso
-              </Text>
-              <Text fontSize="xs" fontWeight="bold" color={accentColor}>
-                {project.progress || 0}%
-              </Text>
-            </Flex>
-            <Progress 
-              value={project.progress || 0} 
-              size="sm" 
-              colorScheme={project.progress === 100 ? "green" : "blue"}
-              borderRadius="full"
-              bg={progressBg}
-            />
-          </Box>
-            
-            {/* Miembros del equipo */}
-            {project.users && project.users.length > 0 && (
-              <Flex justify="space-between" align="center">
-                <Flex align="center">
-                  <Icon as={FiUsers} color={textColor} mr={2} />
-                  <Text fontSize="xs" color={textColor}>
-                    Equipo
-                  </Text>
-                </Flex>
-                <AvatarGroup size="xs" max={3}>
-                  {project.users.map((member, index) => (
-                    <Avatar 
-                      key={index} 
-                      name={member.name} 
-                      src={member.avatar} 
-                    />
-                  ))}
-                </AvatarGroup>
+              <Flex justify="space-between" mb={1}>
+                <Text fontSize="xs" fontWeight="medium" color={textColor}>
+                  Progreso
+                </Text>
+                <Text fontSize="xs" fontWeight="bold" color={accentColor}>
+                  {project.progress || 0}%
+                </Text>
               </Flex>
-            )}
+              <Progress 
+                value={project.progress || 0} 
+                size="sm" 
+                colorScheme={project.progress === 100 ? "green" : "blue"}
+                borderRadius="full"
+                bg={progressBg}
+              />
+            </Box>
             
-            {/* Botón de acción */}
             <Button 
               rightIcon={<FiArrowRight />}
               colorScheme="blue"
@@ -277,7 +275,7 @@ const ProjectCard: React.FC<ProjectCardProps> = ({ project }) => {
               onClick={() => handleViewDetails(project.id)}
               alignSelf="flex-end"
               _hover={{
-                bg: 'blue.50',
+                bg: hoverBg,
                 color: 'blue.600'
               }}
             >

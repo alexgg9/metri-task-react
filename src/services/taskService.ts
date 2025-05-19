@@ -43,14 +43,36 @@ export const createTask = async (data: Partial<Task>) => {
     }
 };
 
-export const updateTask = async (id: number, data: Partial<Task>) => {
+export const updateTask = async (taskId: number, taskData: Partial<Task>): Promise<Task> => {
     try {
-        const response = await axios.put(`${API_URL}/tasks/${id}`, data, {
-            headers: { Authorization: `Bearer ${token()}` },
+        const token = localStorage.getItem('token');
+        if (!token) {
+            throw new Error('No hay token de autenticación');
+        }
+
+        // Asegurarnos de que solo enviamos los campos necesarios
+        const dataToSend = {
+            name: taskData.name,
+            description: taskData.description,
+            status: taskData.status,
+            priority: taskData.priority,
+            dueDate: taskData.dueDate,
+            project_id: taskData.project_id
+        };
+
+        const response = await axios.put(`${API_URL}/tasks/${taskId}`, dataToSend, {
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
+            }
         });
+
         return response.data;
     } catch (error) {
-        console.error(`Error al actualizar la tarea con ID ${id}:`, error);
+        if (axios.isAxiosError(error)) {
+            console.error('Error al actualizar la tarea:', error.response?.data);
+            throw new Error(error.response?.data?.message || 'Error al actualizar la tarea');
+        }
         throw error;
     }
 };
@@ -63,6 +85,29 @@ export const deleteTask = async (id: number) => {
         return response.data;
     } catch (error) {
         console.error(`Error al eliminar la tarea con ID ${id}:`, error);
+        throw error;
+    }
+};
+
+export const getTasksByProjectId = async (projectId: number) => {
+    try {
+        console.log('Obteniendo tareas para el proyecto:', projectId);
+        console.log('URL de la API:', API_URL);
+        const response = await axios.get(`${API_URL}/projects/${projectId}/tasks`, {
+            headers: { Authorization: `Bearer ${token()}` },
+        });
+        console.log('Respuesta del servidor:', response);
+        return response.data;
+    } catch (error) {
+        if (axios.isAxiosError(error)) {
+            console.error('Error al obtener tareas del proyecto:', {
+                status: error.response?.status,
+                data: error.response?.data,
+                message: error.message
+            });
+        } else {
+            console.error('Error al obtener tareas del proyecto:', error);
+        }
         throw error;
     }
 };

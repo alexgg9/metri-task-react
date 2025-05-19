@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Form, Input, Button, Card, Typography, message } from 'antd';
 import { useNavigate } from 'react-router-dom';
-import { createProject } from '../services/projectService';
+import { createProject } from '../../services/projectService';
 
 const { Title } = Typography;
 const { TextArea } = Input;
