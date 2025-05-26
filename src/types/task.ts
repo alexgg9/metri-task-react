@@ -1,19 +1,16 @@
-import { User } from "./user";
+import { User } from './user';
 import { Project } from "./project"; 
 
 export interface Task {
     id: number;
     name: string;
-    description?: string;
-    status: 'pending' | 'in_progress' | 'completed';
+    description: string;
+    status: string;
     priority: 'low' | 'medium' | 'high';
-    dueDate?: string;
+    due_date: string;
     project_id: number;
-    assignee?: {
-        id: number;
-        name: string;
-    };
-    tags?: string[];
-    created_at?: string;
-    updated_at?: string;
+    assigned_to: User;
+    created_by: User;
+    created_at: string;
+    updated_at: string;
 }

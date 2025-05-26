@@ -2,19 +2,31 @@ import axios from "axios";
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8000/api";
 
+// Configurar el interceptor para añadir el token a todas las peticiones
+axios.interceptors.request.use(
+  (config) => {
+    const token = localStorage.getItem("token");
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+    return config;
+  },
+  (error) => {
+    return Promise.reject(error);
+  }
+);
+
 export const login = async (email: string, password: string) => {
     try {
         const response = await axios.post(`${API_URL}/login`, { email, password });
-        console.log("Login exitoso:", response.data);
         const token = response.data.access_token;
-        localStorage.setItem("token", token); 
+        localStorage.setItem("token", token);
         return response.data;
     } catch (error) {
         console.error("Error al hacer login:", error);
-        throw error; 
+        throw error;
     }
 };
-
 
 export const register = async (name: string, email: string, password: string, role: string) => {
     try {
@@ -47,16 +59,19 @@ export const getUserInfo = async () => {
     }
   };
 
-
 export const logout = async () => {
     try {
         const token = localStorage.getItem("token");
-        await axios.post(`${API_URL}/logout`, null, {
-            headers: { Authorization: `Bearer ${token}` },
-        });
-        localStorage.removeItem("token"); 
+        if (token) {
+            await axios.post(`${API_URL}/logout`, {}, {
+                headers: {
+                    Authorization: `Bearer ${token}`
+                }
+            });
+        }
     } catch (error) {
-        console.error("Error al hacer logout:", error);
-        throw error;
+        console.error("Error al cerrar sesión:", error);
+    } finally {
+        localStorage.removeItem("token");
     }
 };

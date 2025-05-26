@@ -11,10 +11,28 @@ const API = axios.create({
 
 export const getCurrentUser = async () => {
   try {
-    const response = await API.get('/user');
+    console.log('Intentando obtener usuario actual...');
+    const token = localStorage.getItem('token');
+    console.log('Token encontrado:', !!token);
+
+    if (!token) {
+      throw new Error('No hay token disponible');
+    }
+
+    const response = await axios.get(`${API_URL}/user`, {
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    });
+
+    console.log('Respuesta del servidor:', response.data);
     return response.data;
   } catch (error) {
-    console.error('Error al obtener el usuario autenticado:', error);
+    console.error('Error detallado al obtener usuario:', error);
+    if (axios.isAxiosError(error)) {
+      console.error('Status:', error.response?.status);
+      console.error('Data:', error.response?.data);
+    }
     throw error;
   }
 };

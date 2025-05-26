@@ -12,6 +12,7 @@ import Topbar from './components/Topbar';
 import { ChakraProvider, Box, Flex, extendTheme } from '@chakra-ui/react';
 import ProfileUser from './components/user/ProfileUser';
 import { AuthProvider } from './contexts/AuthContext';
+import { ProjectProvider } from './contexts/ProjectContext';
 
 const MainLayout: React.FC = () => {
   const [collapsed, setCollapsed] = useState(false);
@@ -20,7 +21,6 @@ const MainLayout: React.FC = () => {
     setCollapsed(!collapsed);
   };
 
-  
   return (
     <Flex h="100vh" overflow="hidden">
       <Sidebar collapsed={collapsed} />
@@ -48,6 +48,7 @@ const KanbanBoardWrapper: React.FC = () => {
   const { projectId } = useParams<{ projectId: string }>();
   return <KanbanBoard projectId={Number(projectId)} />;
 };
+
 const theme = extendTheme({
   colors: {
     brand: {
@@ -64,29 +65,30 @@ const theme = extendTheme({
     body: 'Inter, sans-serif',
   },
 });
+
 const App: React.FC = () => {
+  console.log('App - Iniciando aplicación');
+
   return (
     <ChakraProvider theme={theme}>
       <AuthProvider>
-        <Routes>
-          {/* Rutas públicas */}
-          <Route path="/auth" element={<AuthPage />} />
-          <Route path="/unauthorized" element={<UnauthorizedPage />} />
+        <ProjectProvider>
+          <Routes>
+            {/* Rutas públicas */}
+            <Route path="/auth" element={<AuthPage />} />
+            <Route path="/unauthorized" element={<UnauthorizedPage />} />
 
-          {/* Rutas protegidas */}
-          <Route path="/" element={<PrivateRoute><MainLayout /></PrivateRoute>}>
-            <Route index element={<Navigate to="/projects" replace />} />
-            <Route path="projects" element={<ProjectList />} />
-            <Route path="projects/new" element={
-              <PrivateRoute requiredPermission="create_project">
-                <CreateProject />
-              </PrivateRoute>
-            } />
-            <Route path="projects/:projectId" element={<ProjectDetail />} />
-            <Route path="projects/:projectId/kanban" element={<KanbanBoardWrapper />} />
-            <Route path="profile" element={<ProfileUser />} /> 
-          </Route>
-        </Routes>
+            {/* Rutas protegidas */}
+            <Route element={<PrivateRoute><MainLayout /></PrivateRoute>}>
+              <Route path="/" element={<Navigate to="/projects" replace />} />
+              <Route path="/projects" element={<ProjectList />} />
+              <Route path="/projects/new" element={<CreateProject />} />
+              <Route path="/projects/:projectId" element={<ProjectDetail />} />
+              <Route path="/projects/:projectId/kanban" element={<KanbanBoardWrapper />} />
+              <Route path="/profile" element={<ProfileUser />} />
+            </Route>
+          </Routes>
+        </ProjectProvider>
       </AuthProvider>
     </ChakraProvider>
   );

@@ -54,6 +54,7 @@ import {
 import { Project } from '../../types/project';
 import { getProjectById, deleteProject } from '../../services/projectService';
 import KanbanBoard from '../kanban/KanbanBoard';
+import { useProject } from '../../contexts/ProjectContext';
 
 const ProjectDetail: React.FC = () => {
   // Hooks de React Router
@@ -72,6 +73,9 @@ const ProjectDetail: React.FC = () => {
   const textColor = useColorModeValue('gray.600', 'gray.300');
   const progressBg = useColorModeValue('gray.100', 'gray.600');
 
+  // Hooks de contexto
+  const { setCurrentProject } = useProject();
+
   // Efectos
   useEffect(() => {
     const fetchProject = async () => {
@@ -80,6 +84,7 @@ const ProjectDetail: React.FC = () => {
       try {
         const data = await getProjectById(Number(projectId));
         setProject(data);
+        setCurrentProject(data);
       } catch (error) {
         console.error('Error al cargar el proyecto:', error);
         toast({
@@ -95,7 +100,12 @@ const ProjectDetail: React.FC = () => {
     };
 
     fetchProject();
-  }, [projectId, toast]);
+
+    // Limpiar el proyecto actual cuando se desmonte el componente
+    return () => {
+      setCurrentProject(null);
+    };
+  }, [projectId, toast, setCurrentProject]);
 
   const handleEditProject = () => {
     if (project) {

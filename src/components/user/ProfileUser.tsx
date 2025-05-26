@@ -29,6 +29,9 @@ const ProfileUser: React.FC = () => {
     projectsCompleted: 0,
     tasksCompleted: 0,
     projectsInProgress: 0,
+    totalProjects: 0,
+    totalTasks: 0,
+    pendingTasks: 0,
     joinDate: ''
   });
   const toast = useToast();
@@ -63,26 +66,18 @@ const ProfileUser: React.FC = () => {
     fetchUserData();
   }, [toast]);
 
-  
   const fetchUserStats = async (userId: number, joinDate: string) => {
     try {
       const projects: Project[] = await getProjects();
       
-      // More inclusive filtering to capture all user projects
       const userProjects = Array.isArray(projects) 
         ? projects.filter(project => 
-            // Check if user is in project.users array
             (project.users && project.users.some(u => u.id === userId)) ||
-            // Or if user is the creator
             (project.creator && project.creator.id === userId) ||
-            // Or if project.user_id matches userId
             project.user_id === userId
           )
         : [];
       
-      console.log("Proyectos del usuario (filtrado mejorado):", userProjects); 
-      
-      // Rest of your code remains the same
       const completedProjects = userProjects.filter(project => 
         project.status && (
           project.status.toLowerCase().includes('complet') || 
@@ -96,16 +91,12 @@ const ProfileUser: React.FC = () => {
       const tasksResponse = await getTasks();
       const tasks = Array.isArray(tasksResponse) ? tasksResponse : [];
       
-
       const userTasks = tasks.filter(task => 
         (task && task.assigned_to && task.assigned_to.id === userId) ||
         (task && task.created_by.id === userId) ||
         (task && task.created_by.id && task.created_by.id === userId)
       );
       
-      console.log("Tareas del usuario (filtrado mejorado):", userTasks);
-      
-
       const completedTasks = userTasks.filter(task => 
         task.status && (
           task.status.toLowerCase().includes('complet') || 
@@ -122,23 +113,17 @@ const ProfileUser: React.FC = () => {
         projectsCompleted: completedProjects,
         tasksCompleted: completedTasks,
         projectsInProgress: inProgressProjects,
-        joinDate: joinDate,
-      });
-      
-      console.log("Estadísticas calculadas (mejoradas):", {
         totalProjects,
-        projectsCompleted: completedProjects,
-        projectsInProgress: inProgressProjects,
         totalTasks,
-        tasksCompleted: completedTasks,
-        pendingTasks
+        pendingTasks,
+        joinDate
       });
       
     } catch (error) {
       console.error('Error al obtener estadísticas:', error);
       setUserStats(prev => ({
         ...prev,
-        joinDate: joinDate
+        joinDate
       }));
     }
   };

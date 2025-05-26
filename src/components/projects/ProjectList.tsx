@@ -1,20 +1,24 @@
 import React, { useState, useEffect } from 'react';
-import { 
+import {
   Box, 
-  Button, 
+  Button,
   HStack, 
   useDisclosure,
   useColorModeValue,
   Text,
   Icon,
   Flex,
-  Select
+  Select,
+  VStack,
+  Heading,
+  Center
 } from '@chakra-ui/react';
 import { FiPlus } from 'react-icons/fi';
 import { getProjects } from '../../services/projectService';
 import ProjectListContent from './ProjectListContent';
 import CreateProjectModal from './CreateProjectModal';
 import { Project } from '@/types/project';
+import { useAuth } from '../../contexts/AuthContext';
 
 const ITEMS_PER_PAGE = 8;
 
@@ -25,9 +29,11 @@ const ProjectList: React.FC = () => {
   const [totalPages, setTotalPages] = useState(1);
   const [sortBy, setSortBy] = useState('newest');
   const { isOpen, onOpen, onClose } = useDisclosure();
+  const { user } = useAuth();
 
   const bgColor = useColorModeValue('white', 'gray.800');
   const borderColor = useColorModeValue('gray.200', 'gray.600');
+  const textColor = useColorModeValue('gray.600', 'gray.300');
 
   const fetchProjects = async () => {
     setLoading(true);
@@ -35,8 +41,23 @@ const ProjectList: React.FC = () => {
       const response = await getProjects();
       const projectsData = response || [];
       
+      // Filtrar proyectos del usuario actual
+      const userProjects = projectsData.filter(project => {
+        // Verificar si el usuario es el creador
+        const isCreator = project.creator?.id === user?.id;
+        
+        // Verificar si el usuario está en el array de usuarios
+        const isMember = project.users?.some(u => u.id === user?.id);
+        
+        // Verificar si el usuario es el propietario (user_id)
+        const isOwner = project.user_id === user?.id;
+        
+        // Solo incluir si es creador, miembro o propietario
+        return isCreator || isMember || isOwner;
+      });
+      
       // Ordenar proyectos
-      let sortedProjects = [...projectsData];
+      let sortedProjects = [...userProjects];
       switch (sortBy) {
         case 'newest':
           sortedProjects.sort((a, b) => new Date(b.created_at || '').getTime() - new Date(a.created_at || '').getTime());
@@ -67,8 +88,10 @@ const ProjectList: React.FC = () => {
   };
 
   useEffect(() => {
-    fetchProjects();
-  }, [sortBy]);
+    if (user) {
+      fetchProjects();
+    }
+  }, [sortBy, user]);
 
   const handlePageChange = (page: number) => {
     setCurrentPage(page);
@@ -82,6 +105,39 @@ const ProjectList: React.FC = () => {
     (currentPage - 1) * ITEMS_PER_PAGE,
     currentPage * ITEMS_PER_PAGE
   );
+
+  if (!loading && projects.length === 0) {
+    return (
+      <Box p={8}>
+        <VStack spacing={6} align="center" justify="center" minH="60vh">
+          <Heading size="lg" color={textColor}>
+            No tienes proyectos
+          </Heading>
+          <Text color={textColor} textAlign="center">
+            No tienes ningún proyecto asignado o creado.
+            <br />
+            Crea un nuevo proyecto o pide que te asignen a uno existente.
+          </Text>
+          <Button
+            leftIcon={<Icon as={FiPlus} />}
+            colorScheme="blue"
+            size="lg"
+            onClick={onOpen}
+            _hover={{ transform: 'translateY(-2px)', boxShadow: 'lg' }}
+            transition="all 0.2s"
+          >
+            Crear Proyecto
+          </Button>
+        </VStack>
+
+        <CreateProjectModal
+          isOpen={isOpen}
+          onClose={onClose}
+          onProjectCreated={handleProjectCreated}
+        />
+      </Box>
+    );
+  }
 
   return (
     <Box>
@@ -97,7 +153,7 @@ const ProjectList: React.FC = () => {
         borderColor={borderColor}
       >
         <Text fontSize="xl" fontWeight="bold" color={useColorModeValue('gray.700', 'white')}>
-          Proyectos
+          Mis Proyectos
         </Text>
         <HStack spacing={4}>
           <Select

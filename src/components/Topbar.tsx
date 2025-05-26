@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import {
   Box,
@@ -18,9 +18,9 @@ import {
   HStack,
 } from '@chakra-ui/react';
 import { FiMenu, FiX, FiUser, FiSettings, FiLogOut, FiMoon, FiSun } from 'react-icons/fi';
-import { getCurrentUser } from '../services/userService';
 import { logout } from '../services/authService';
-import { getProjectById } from '../services/projectService';
+import { useAuth } from '../contexts/AuthContext';
+import { useProject } from '../contexts/ProjectContext';
 
 interface TopbarProps {
   collapsed: boolean;
@@ -30,9 +30,9 @@ interface TopbarProps {
 const Topbar: React.FC<TopbarProps> = ({ collapsed, toggleCollapsed }) => {
   const location = useLocation();
   const navigate = useNavigate();
-  const [userName, setUserName] = useState<string>('Usuario');
   const { colorMode, toggleColorMode } = useColorMode();
-  const [projectName, setProjectName] = useState<string>('');
+  const { user } = useAuth();
+  const { currentProject, loading } = useProject();
   
   const bgColor = useColorModeValue('white', 'gray.800');
   const borderColor = useColorModeValue('gray.200', 'gray.700');
@@ -42,50 +42,11 @@ const Topbar: React.FC<TopbarProps> = ({ collapsed, toggleCollapsed }) => {
   const breadcrumbHoverColor = useColorModeValue('blue.600', 'blue.400');
   const breadcrumbSeparatorColor = useColorModeValue('gray.400', 'gray.600');
 
-  useEffect(() => {
-    const fetchUserProfile = async () => {
-      try {
-        const userProfile = await getCurrentUser();
-        if (userProfile && userProfile.name) {
-          setUserName(userProfile.name);
-        }
-      } catch (error) {
-        console.error('Error al obtener el perfil del usuario:', error);
-      }
-    };
-
-    fetchUserProfile();
-  }, []);
-
-  useEffect(() => {
-    const pathSnippets = location.pathname.split('/').filter(Boolean);
-    if (pathSnippets[0] === 'projects' && pathSnippets[1] && !isNaN(Number(pathSnippets[1]))) {
-      console.log('Detectada ruta de proyecto, ID:', pathSnippets[1]);
-      const fetchProjectName = async () => {
-        try {
-          const projectId = Number(pathSnippets[1]);
-          console.log('Obteniendo proyecto con ID:', projectId);
-          const projectData = await getProjectById(projectId);
-          console.log('Datos del proyecto:', projectData);
-          if (projectData && projectData.name) {
-            console.log('Nombre del proyecto obtenido:', projectData.name);
-            setProjectName(projectData.name);
-          }
-        } catch (error) {
-          console.error('Error al obtener el nombre del proyecto:', error);
-          setProjectName('Proyecto');
-        }
-      };
-      
-      fetchProjectName();
-    }
-  }, [location.pathname]);
-
   const handleLogout = async () => {
     try {
       await logout();
       localStorage.removeItem('token');
-      navigate('/auth');
+      navigate('/auth', { replace: true });
     } catch (error) {
       console.error('Error al cerrar sesión:', error);
     }
@@ -105,13 +66,6 @@ const Topbar: React.FC<TopbarProps> = ({ collapsed, toggleCollapsed }) => {
       return <Text fontWeight="medium" color={textColor}>Dashboard</Text>;
     }
 
-    // Verificar si estamos en una ruta de proyecto y obtener el nombre
-    let projectSegmentName = '';
-    if (pathSnippets[0] === 'projects' && pathSnippets[1] && !isNaN(Number(pathSnippets[1]))) {
-      projectSegmentName = projectName || 'Proyecto';
-      console.log('Nombre del proyecto en breadcrumb:', projectSegmentName);
-    }
-
     return (
       <Flex align="center">
         <Box 
@@ -128,19 +82,29 @@ const Topbar: React.FC<TopbarProps> = ({ collapsed, toggleCollapsed }) => {
           const url = `/${pathSnippets.slice(0, index + 1).join('/')}`;
           const isLast = index === pathSnippets.length - 1;
           
-          // Determinar el nombre a mostrar
           let name = pathMap[url] || segment.charAt(0).toUpperCase() + segment.slice(1);
           
-          // Si estamos en el segmento del ID del proyecto, usar el nombre del proyecto
           if (pathSnippets[0] === 'projects' && index === 1 && !isNaN(Number(segment))) {
-            name = projectSegmentName;
+            if (loading) {
+              name = 'Cargando...';
+            } else {
+              name = currentProject?.name || 'Proyecto';
+            }
           }
 
           return (
             <React.Fragment key={url}>
               <Text mx={2} color={breadcrumbSeparatorColor}>/</Text>
               {isLast ? (
-                <Text color={breadcrumbActiveColor} fontWeight="semibold" fontSize="sm">{name}</Text>
+                <Text 
+                  color={breadcrumbActiveColor} 
+                  fontWeight="semibold" 
+                  fontSize="sm"
+                  opacity={loading ? 0.7 : 1}
+                  transition="opacity 0.2s"
+                >
+                  {name}
+                </Text>
               ) : (
                 <Box 
                   as={Link} 
@@ -210,12 +174,12 @@ const Topbar: React.FC<TopbarProps> = ({ collapsed, toggleCollapsed }) => {
               <Flex align="center">
                 <Avatar 
                   size="sm" 
-                  name={userName} 
+                  name={user?.name || 'Usuario'} 
                   mr={2}
                   bg={useColorModeValue('blue.500', 'blue.400')}
                   color="white"
                 />
-                <Text color={textColor}>{userName}</Text>
+                <Text color={textColor}>{user?.name || 'Usuario'}</Text>
               </Flex>
             </MenuButton>
             <MenuList 

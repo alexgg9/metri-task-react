@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { login, register } from "../services/authService";
-import { FiUser, FiEye, FiMail, FiLock, FiEyeOff, FiChevronLeft  } from 'react-icons/fi';
+import { FiUser, FiEye, FiMail, FiLock, FiEyeOff, FiChevronLeft, FiCheckCircle, FiAlertTriangle } from 'react-icons/fi';
 import { useNavigate } from "react-router-dom"; 
 
 export default function AuthForms() {
@@ -33,9 +33,7 @@ export default function AuthForms() {
 
     try {
       if (isLogin) {
-        // Intentar hacer login
         await login(email, password);
-        console.log("Login exitoso");
         navigate("/projects"); 
       } else {
         if (password !== confirmPassword) {
@@ -44,7 +42,6 @@ export default function AuthForms() {
           return;
         }
         await register(name, email, password, role);
-        console.log("Registro exitoso");
         setIsLogin(true);
         resetFields();
       }
@@ -56,128 +53,145 @@ export default function AuthForms() {
   };
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-gradient-to-tr from-[#e2e8f0] to-[#f8fafc] px-4">
-      <div className="w-full max-w-md bg-white/40 backdrop-blur-lg rounded-3xl shadow-2xl border border-white/30 p-8">
-        <div className="text-center mb-6">
-          <h1 className="text-3xl font-bold text-indigo-700">
-            {isLogin ? "Bienvenido a MetriTask" : "Crear cuenta"}
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-800 via-indigo-900 to-blue-900 px-4">
+      <div className="w-full max-w-md">
+        {/* Logo y Título */}
+        <div className="text-center mb-8">
+          <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gradient-to-r from-blue-500 to-indigo-600 mb-4 shadow-lg shadow-blue-500/20">
+            <FiCheckCircle className="w-8 h-8 text-white" />
+          </div>
+          <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-400 to-indigo-300 text-transparent bg-clip-text">
+            {isLogin ? "Bienvenido de nuevo" : "Crear cuenta"}
           </h1>
-          <p className="text-gray-600 mt-2">
+          <p className="text-gray-300 mt-2">
             {isLogin ? "Inicia sesión para continuar" : "Regístrate para empezar"}
           </p>
         </div>
 
-        {error && (
-          <div className="mb-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded-md text-sm">
-            {error}
-          </div>
-        )}
-
-        <form onSubmit={handleSubmit} className="space-y-5">
-          {!isLogin && (
-            <>
-              <InputWithIcon
-                icon={<FiUser size={18} />}
-                id="name"
-                label="Nombre completo"
-                type="text"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                placeholder="Introduce tu nombre"
-              />
-
-              <div>
-                <label htmlFor="role" className="block text-gray-700 font-medium mb-1">
-                  Rol
-                </label>
-                <select
-                  id="role"
-                  value={role}
-                  onChange={(e) => setRole(e.target.value)}
-                  className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-indigo-500 focus:outline-none transition bg-white"
-                  required
-                >
-                  <option value="member">Miembro</option>
-                  <option value="manager">Manager</option>
-                </select>
-              </div>
-            </>
+        {/* Formulario */}
+        <div className="bg-slate-800/50 backdrop-blur-lg rounded-2xl shadow-xl border border-white/10 p-8">
+          {error && (
+            <div className="mb-6 p-4 bg-red-900/50 border border-red-500/30 rounded-xl text-red-200 text-sm flex items-center">
+              <FiAlertTriangle className="w-5 h-5 mr-2" />
+              {error}
+            </div>
           )}
 
-          <InputWithIcon
-            icon={<FiMail size={18} />}
-            id="email"
-            label="Correo electrónico"
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            placeholder="Introducir tu correo electrónico"
-          />
+          <form onSubmit={handleSubmit} className="space-y-6">
+            {!isLogin && (
+              <>
+                <InputWithIcon
+                  icon={<FiUser className="w-5 h-5" />}
+                  id="name"
+                  label="Nombre completo"
+                  type="text"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  placeholder="Introduce tu nombre"
+                />
 
-          <InputWithIcon
-            icon={<FiLock size={18} />}
-            id="password"
-            label="Contraseña"
-            type={showPassword ? "text" : "password"}
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            placeholder="Introducir tu contraseña"
-            suffix={
-              <button type="button" onClick={() => setShowPassword(!showPassword)}>
-                {showPassword ? <FiEyeOff size={18} /> : <FiEye size={18} />}
-              </button>
-            }
-          />
+                <div>
+                  <label htmlFor="role" className="block text-sm font-medium text-gray-300 mb-1">
+                    Rol
+                  </label>
+                  <select
+                    id="role"
+                    value={role}
+                    onChange={(e) => setRole(e.target.value)}
+                    className="w-full px-4 py-2.5 rounded-xl border border-gray-600 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all bg-slate-700/50 backdrop-blur-sm text-gray-200"
+                    required
+                  >
+                    <option value="member">Miembro</option>
+                    <option value="manager">Manager</option>
+                  </select>
+                </div>
+              </>
+            )}
 
-          {!isLogin && (
             <InputWithIcon
-              icon={<FiLock size={18} />}
-              id="confirm-password"
-              label="Confirmar contraseña"
-              type={showPassword ? "text" : "password"}
-              value={confirmPassword}
-              onChange={(e) => setConfirmPassword(e.target.value)}
-              placeholder="Confirmar contraseña"
+              icon={<FiMail className="w-5 h-5" />}
+              id="email"
+              label="Correo electrónico"
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="Introduce tu correo electrónico"
             />
-          )}
 
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-semibold shadow-md transition-all"
-          >
-            {loading ? "Procesando..." : isLogin ? "Iniciar Sesión" : "Registrarse"}
-          </button>
-        </form>
+            <InputWithIcon
+              icon={<FiLock className="w-5 h-5" />}
+              id="password"
+              label="Contraseña"
+              type={showPassword ? "text" : "password"}
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder="Introduce tu contraseña"
+              suffix={
+                <button 
+                  type="button" 
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="text-gray-400 hover:text-gray-200 transition-colors"
+                >
+                  {showPassword ? <FiEyeOff className="w-5 h-5" /> : <FiEye className="w-5 h-5" />}
+                </button>
+              }
+            />
 
-        <div className="mt-6 text-center text-sm text-gray-600">
-          {isLogin ? (
-            <>
-              ¿No tienes cuenta?{" "}
+            {!isLogin && (
+              <InputWithIcon
+                icon={<FiLock className="w-5 h-5" />}
+                id="confirm-password"
+                label="Confirmar contraseña"
+                type={showPassword ? "text" : "password"}
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                placeholder="Confirma tu contraseña"
+              />
+            )}
+
+            <button
+              type="submit"
+              disabled={loading}
+              className="w-full py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all duration-300 hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {loading ? (
+                <div className="flex items-center justify-center">
+                  <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>
+                  Procesando...
+                </div>
+              ) : isLogin ? "Iniciar Sesión" : "Crear cuenta"}
+            </button>
+          </form>
+
+          <div className="mt-6 text-center text-sm text-gray-300">
+            {isLogin ? (
+              <>
+                ¿No tienes cuenta?{" "}
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsLogin(false);
+                    resetFields();
+                  }}
+                  className="text-blue-400 hover:text-blue-300 font-medium transition-colors"
+                >
+                  Regístrate
+                </button>
+              </>
+            ) : (
               <button
                 type="button"
                 onClick={() => {
-                  setIsLogin(false);
+                  setIsLogin(true);
                   resetFields();
                 }}
-                className="text-indigo-600 hover:underline font-medium"
+                className="inline-flex items-center text-blue-400 hover:text-blue-300 font-medium transition-colors"
               >
-                Regístrate
+                <FiChevronLeft className="w-4 h-4 mr-1" />
+                Volver al inicio de sesión
               </button>
-            </>
-          ) : (
-            <button
-              type="button"
-              onClick={() => {
-                setIsLogin(true);
-                resetFields();
-              }}
-              className="flex items-center justify-center mx-auto text-indigo-600 hover:underline gap-1"
-            >
-              <FiChevronLeft size={16} />
-              Volver al inicio de sesión
-            </button>
-          )}
+            )}
+          </div>
         </div>
       </div>
     </div>
@@ -205,7 +219,7 @@ function InputWithIcon({
 }) {
   return (
     <div>
-      <label htmlFor={id} className="block text-gray-700 font-medium mb-1">
+      <label htmlFor={id} className="block text-sm font-medium text-gray-300 mb-1">
         {label}
       </label>
       <div className="relative">
@@ -219,9 +233,13 @@ function InputWithIcon({
           onChange={onChange}
           placeholder={placeholder}
           required
-          className="w-full pl-10 pr-10 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-indigo-500 focus:outline-none transition"
+          className="w-full pl-10 pr-10 py-2.5 rounded-xl border border-gray-600 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all bg-slate-700/50 backdrop-blur-sm text-gray-200 placeholder-gray-400"
         />
-        {suffix && <div className="absolute inset-y-0 right-0 pr-3 flex items-center">{suffix}</div>}
+        {suffix && (
+          <div className="absolute inset-y-0 right-0 pr-3 flex items-center">
+            {suffix}
+          </div>
+        )}
       </div>
     </div>
   );
