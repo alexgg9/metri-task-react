@@ -21,8 +21,9 @@ import {
   Flex,
   FormErrorMessage
 } from '@chakra-ui/react';
-import { FiFolder, FiCalendar, FiFlag, FiAlignLeft } from 'react-icons/fi';
+import { FiCalendar, FiFlag, FiType, FiAlignLeft } from 'react-icons/fi';
 import { createProject } from '../../services/projectService';
+import { useAuth } from '../../contexts/AuthContext';
 
 interface CreateProjectModalProps {
   isOpen: boolean;
@@ -43,6 +44,7 @@ const CreateProjectModal: React.FC<CreateProjectModalProps> = ({
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const toast = useToast();
+  const { user } = useAuth();
 
   const bgColor = useColorModeValue('white', 'gray.800');
   const borderColor = useColorModeValue('gray.200', 'gray.600');
@@ -55,14 +57,13 @@ const CreateProjectModal: React.FC<CreateProjectModalProps> = ({
     if (!name.trim()) {
       newErrors.name = 'El nombre es requerido';
     }
-    if (!description.trim()) {
-      newErrors.description = 'La descripción es requerida';
-    }
+    
     if (!startDate) {
       newErrors.startDate = 'La fecha de inicio es requerida';
     }
+    
     if (endDate && new Date(endDate) < new Date(startDate)) {
-      newErrors.endDate = 'La fecha de fin debe ser posterior a la fecha de inicio';
+      newErrors.endDate = 'La fecha de fin debe ser posterior o igual a la fecha de inicio';
     }
 
     setErrors(newErrors);
@@ -72,19 +73,31 @@ const CreateProjectModal: React.FC<CreateProjectModalProps> = ({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!validateForm()) return;
+    if (!validateForm()) {
+      return;
+    }
     
     setLoading(true);
 
     try {
-      await createProject({
+      if (!user) {
+        throw new Error('No hay usuario autenticado');
+      }
+
+      const projectData = {
         name,
         description,
         priority: priority as 'low' | 'medium' | 'high',
         start_date: startDate,
-        end_date: endDate || undefined,
-        status: 'in progress'
-      });
+        end_date: endDate,
+        status: 'active',
+        progress: 0,
+        user_id: user.id
+      };
+
+      console.log('Datos del proyecto antes de enviar:', projectData);
+
+      await createProject(projectData);
 
       toast({
         title: 'Proyecto creado',
@@ -97,11 +110,12 @@ const CreateProjectModal: React.FC<CreateProjectModalProps> = ({
       onProjectCreated();
       onClose();
       resetForm();
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error al crear el proyecto:', error);
+      const errorMessage = error.response?.data?.message || 'No se pudo crear el proyecto';
       toast({
         title: 'Error',
-        description: 'No se pudo crear el proyecto',
+        description: errorMessage,
         status: 'error',
         duration: 5000,
         isClosable: true,
@@ -136,7 +150,7 @@ const CreateProjectModal: React.FC<CreateProjectModalProps> = ({
             pb={4}
           >
             <Flex align="center" gap={2}>
-              <Icon as={FiFolder} boxSize={5} color="blue.500" />
+              <Icon as={FiType} boxSize={5} color="blue.500" />
               <Box>Crear Nuevo Proyecto</Box>
             </Flex>
           </ModalHeader>
@@ -147,14 +161,14 @@ const CreateProjectModal: React.FC<CreateProjectModalProps> = ({
               <FormControl isRequired isInvalid={!!errors.name}>
                 <FormLabel fontWeight="medium" fontSize="sm">
                   <Flex align="center" gap={2}>
-                    <Icon as={FiFolder} boxSize={4} />
-                    Nombre del Proyecto
+                    <Icon as={FiType} boxSize={4} />
+                    Título
                   </Flex>
                 </FormLabel>
                 <Input
                   value={name}
                   onChange={(e) => setName(e.target.value)}
-                  placeholder="Nombre del proyecto"
+                  placeholder="Título del proyecto"
                   bg={inputBg}
                   borderColor={inputBorder}
                   _hover={{ borderColor: 'blue.400' }}
@@ -163,7 +177,7 @@ const CreateProjectModal: React.FC<CreateProjectModalProps> = ({
                 <FormErrorMessage>{errors.name}</FormErrorMessage>
               </FormControl>
 
-              <FormControl isRequired isInvalid={!!errors.description}>
+              <FormControl>
                 <FormLabel fontWeight="medium" fontSize="sm">
                   <Flex align="center" gap={2}>
                     <Icon as={FiAlignLeft} boxSize={4} />
@@ -180,7 +194,6 @@ const CreateProjectModal: React.FC<CreateProjectModalProps> = ({
                   _hover={{ borderColor: 'blue.400' }}
                   _focus={{ borderColor: 'blue.500', boxShadow: '0 0 0 1px var(--chakra-colors-blue-500)' }}
                 />
-                <FormErrorMessage>{errors.description}</FormErrorMessage>
               </FormControl>
 
               <FormControl isRequired>
@@ -208,7 +221,7 @@ const CreateProjectModal: React.FC<CreateProjectModalProps> = ({
                 <FormLabel fontWeight="medium" fontSize="sm">
                   <Flex align="center" gap={2}>
                     <Icon as={FiCalendar} boxSize={4} />
-                    Fecha de Inicio
+                    Fecha de inicio
                   </Flex>
                 </FormLabel>
                 <Input
@@ -227,7 +240,7 @@ const CreateProjectModal: React.FC<CreateProjectModalProps> = ({
                 <FormLabel fontWeight="medium" fontSize="sm">
                   <Flex align="center" gap={2}>
                     <Icon as={FiCalendar} boxSize={4} />
-                    Fecha de Fin (Opcional)
+                    Fecha de fin
                   </Flex>
                 </FormLabel>
                 <Input

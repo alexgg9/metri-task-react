@@ -23,82 +23,108 @@ import { useAuth } from '../../contexts/AuthContext';
 const ITEMS_PER_PAGE = 8;
 
 const ProjectList: React.FC = () => {
+  // 1. Hooks de estado
   const [projects, setProjects] = useState<Project[]>([]);
-  const [loading, setLoading] = useState<boolean>(false);
+  const [loading, setLoading] = useState<boolean>(true);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [sortBy, setSortBy] = useState('newest');
-  const { isOpen, onOpen, onClose } = useDisclosure();
-  const { user } = useAuth();
 
+  // 2. Hooks de Chakra UI
+  const { isOpen, onOpen, onClose } = useDisclosure();
   const bgColor = useColorModeValue('white', 'gray.800');
   const borderColor = useColorModeValue('gray.200', 'gray.600');
   const textColor = useColorModeValue('gray.600', 'gray.300');
 
-  const fetchProjects = async () => {
-    setLoading(true);
-    try {
-      const response = await getProjects();
-      const projectsData = response || [];
-      
-      // Filtrar proyectos del usuario actual
-      const userProjects = projectsData.filter(project => {
-        // Verificar si el usuario es el creador
-        const isCreator = project.creator?.id === user?.id;
-        
-        // Verificar si el usuario está en el array de usuarios
-        const isMember = project.users?.some(u => u.id === user?.id);
-        
-        // Verificar si el usuario es el propietario (user_id)
-        const isOwner = project.user_id === user?.id;
-        
-        // Solo incluir si es creador, miembro o propietario
-        return isCreator || isMember || isOwner;
-      });
-      
-      // Ordenar proyectos
-      let sortedProjects = [...userProjects];
-      switch (sortBy) {
-        case 'newest':
-          sortedProjects.sort((a, b) => new Date(b.created_at || '').getTime() - new Date(a.created_at || '').getTime());
-          break;
-        case 'oldest':
-          sortedProjects.sort((a, b) => new Date(a.created_at || '').getTime() - new Date(b.created_at || '').getTime());
-          break;
-        case 'name':
-          sortedProjects.sort((a, b) => a.name.localeCompare(b.name));
-          break;
-        case 'priority':
-          const priorityOrder = { high: 0, medium: 1, low: 2 };
-          sortedProjects.sort((a, b) => 
-            (priorityOrder[a.priority as keyof typeof priorityOrder] || 2) - 
-            (priorityOrder[b.priority as keyof typeof priorityOrder] || 2)
-          );
-          break;
-      }
-
-      setProjects(sortedProjects);
-      setTotalPages(Math.ceil(sortedProjects.length / ITEMS_PER_PAGE));
-    } catch (error) {
-      console.error('Error al obtener los proyectos:', error);
-      setProjects([]);
-    } finally {
-      setLoading(false);
-    }
-  };
+  // 3. Hooks de contexto
+  const { user } = useAuth();
 
   useEffect(() => {
-    if (user) {
-      fetchProjects();
-    }
-  }, [sortBy, user]);
+    let isMounted = true;
+
+    const fetchProjects = async () => {
+      if (!user) return;
+      
+      try {
+        const response = await getProjects();
+        if (!isMounted) return;
+
+        const projectsData = response || [];
+        
+        // Filtrar proyectos del usuario actual
+        const userProjects = projectsData.filter(project => {
+          const isCreator = project.creator?.id === user.id;
+          const isMember = project.users?.some(u => u.id === user.id);
+          const isOwner = project.user_id === user.id;
+          return isCreator || isMember || isOwner;
+        });
+        
+        // Ordenar proyectos
+        let sortedProjects = [...userProjects];
+        switch (sortBy) {
+          case 'newest':
+            sortedProjects.sort((a, b) => new Date(b.created_at || '').getTime() - new Date(a.created_at || '').getTime());
+            break;
+          case 'oldest':
+            sortedProjects.sort((a, b) => new Date(a.created_at || '').getTime() - new Date(b.created_at || '').getTime());
+            break;
+          case 'name':
+            sortedProjects.sort((a, b) => a.name.localeCompare(b.name));
+            break;
+          case 'priority':
+            const priorityOrder = { high: 0, medium: 1, low: 2 };
+            sortedProjects.sort((a, b) => 
+              (priorityOrder[a.priority as keyof typeof priorityOrder] || 2) - 
+              (priorityOrder[b.priority as keyof typeof priorityOrder] || 2)
+            );
+            break;
+        }
+
+        setProjects(sortedProjects);
+        setTotalPages(Math.ceil(sortedProjects.length / ITEMS_PER_PAGE));
+      } catch (error) {
+        console.error('Error al obtener los proyectos:', error);
+        if (isMounted) {
+          setProjects([]);
+        }
+      } finally {
+        if (isMounted) {
+          setLoading(false);
+        }
+      }
+    };
+
+    fetchProjects();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [user, sortBy]);
 
   const handlePageChange = (page: number) => {
     setCurrentPage(page);
   };
 
-  const handleProjectCreated = () => {
-    fetchProjects();
+  const handleProjectCreated = async () => {
+    setLoading(true);
+    try {
+      const response = await getProjects();
+      const projectsData = response || [];
+      
+      const userProjects = projectsData.filter(project => {
+        const isCreator = project.creator?.id === user?.id;
+        const isMember = project.users?.some(u => u.id === user?.id);
+        const isOwner = project.user_id === user?.id;
+        return isCreator || isMember || isOwner;
+      });
+      
+      setProjects(userProjects);
+      setTotalPages(Math.ceil(userProjects.length / ITEMS_PER_PAGE));
+    } catch (error) {
+      console.error('Error al actualizar los proyectos:', error);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const paginatedProjects = projects.slice(

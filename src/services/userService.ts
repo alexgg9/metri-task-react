@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8000/api";
+const API_URL = import.meta.env.VITE_API_URL;
 
 const API = axios.create({
   baseURL: API_URL,
@@ -11,10 +11,7 @@ const API = axios.create({
 
 export const getCurrentUser = async () => {
   try {
-    console.log('Intentando obtener usuario actual...');
     const token = localStorage.getItem('token');
-    console.log('Token encontrado:', !!token);
-
     if (!token) {
       throw new Error('No hay token disponible');
     }
@@ -25,17 +22,16 @@ export const getCurrentUser = async () => {
       }
     });
 
-    console.log('Respuesta del servidor:', response.data);
     return response.data;
   } catch (error) {
-    console.error('Error detallado al obtener usuario:', error);
     if (axios.isAxiosError(error)) {
-      console.error('Status:', error.response?.status);
-      console.error('Data:', error.response?.data);
+      console.error('Error al obtener usuario:', error.response?.status, error.response?.data);
     }
     throw error;
   }
 };
+
+export const getUserInfo = getCurrentUser; 
 
 export const updateUser = async (userId: number, updatedUserData: any) => {
   try {

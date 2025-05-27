@@ -57,7 +57,7 @@ const CreateTaskModal: React.FC<CreateTaskModalProps> = ({
         name,
         description,
         priority: priority as 'low' | 'medium' | 'high',
-        dueDate,
+        due_date: dueDate,
         status: 'pending',
         project_id: projectId
       });

@@ -14,7 +14,7 @@ import {
 import {
   FiHome,
   FiFolder,
-  FiFileText
+  FiBarChart2
 } from 'react-icons/fi';
 
 interface SidebarProps {
@@ -29,23 +29,16 @@ const Sidebar: React.FC<SidebarProps> = ({ collapsed }) => {
   const hoverBg = useColorModeValue('blue.50', 'blue.900');
   const textColor = useColorModeValue('gray.700', 'gray.200');
   
-  const sidebarWidth = collapsed ? '70px' : '200px';
-  
   const menuItems = [
-    {
-      path: '/',
-      icon: FiHome,
-      label: 'Dashboard'
-    },
     {
       path: '/projects',
       icon: FiFolder,
       label: 'Proyectos'
     },
     {
-      path: '/tasks',
-      icon: FiFileText,
-      label: 'Tareas'
+      path: '/statistics',
+      icon: FiBarChart2,
+      label: 'Estadísticas'
     }
   ];
 
@@ -56,7 +49,7 @@ const Sidebar: React.FC<SidebarProps> = ({ collapsed }) => {
       left={0}
       top={0}
       bottom={0}
-      width={sidebarWidth}
+      width={collapsed ? "80px" : "250px"}
       bg={bgColor}
       boxShadow="sm"
       borderRight="1px"
@@ -85,7 +78,7 @@ const Sidebar: React.FC<SidebarProps> = ({ collapsed }) => {
       <Divider borderColor={borderColor} display={collapsed ? "none" : "block"} />
 
       {/* Navigation Menu */}
-      <VStack gap={2} align="stretch" mt={4} px={2}>
+      <VStack spacing={1} align="stretch" p={4}>
         {menuItems.map((item) => {
           const isActive = location.pathname === item.path;
           const CustomLink = React.forwardRef<HTMLAnchorElement>((props, ref) => (

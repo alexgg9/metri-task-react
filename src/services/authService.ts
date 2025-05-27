@@ -2,7 +2,7 @@ import axios from "axios";
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8000/api";
 
-// Configurar el interceptor para añadir el token a todas las peticiones
+
 axios.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem("token");
@@ -18,10 +18,29 @@ axios.interceptors.request.use(
 
 export const login = async (email: string, password: string) => {
     try {
+        console.log('Iniciando login...');
         const response = await axios.post(`${API_URL}/login`, { email, password });
+        console.log('Respuesta del login:', response.data);
+        
         const token = response.data.access_token;
+        if (!token) {
+            throw new Error('No se recibió el token de acceso');
+        }
+
         localStorage.setItem("token", token);
-        return response.data;
+        console.log('Token guardado en localStorage');
+
+        const userResponse = await axios.get(`${API_URL}/user`, {
+            headers: {
+                Authorization: `Bearer ${token}`
+            }
+        });
+        console.log('Información del usuario obtenida:', userResponse.data);
+        
+        return {
+            ...response.data,
+            user: userResponse.data
+        };
     } catch (error) {
         console.error("Error al hacer login:", error);
         throw error;
@@ -37,27 +56,6 @@ export const register = async (name: string, email: string, password: string, ro
         throw error;
     }
 };
-
-export const getUserInfo = async () => {
-    try {
-      const token = localStorage.getItem("token");
-  
-      if (!token) {
-        throw new Error("No token found");
-      }
-  
-      const response = await axios.get(`${API_URL}/user`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-  
-      return response.data;
-    } catch (error) {
-      console.error("Error al obtener la información del usuario:", error);
-      throw error;
-    }
-  };
 
 export const logout = async () => {
     try {

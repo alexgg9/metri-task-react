@@ -91,14 +91,20 @@ const ProfileUser: React.FC = () => {
       const tasksResponse = await getTasks();
       const tasks = Array.isArray(tasksResponse) ? tasksResponse : [];
       
-      const userTasks = tasks.filter(task => 
-        (task && task.assigned_to && task.assigned_to.id === userId) ||
-        (task && task.created_by.id === userId) ||
-        (task && task.created_by.id && task.created_by.id === userId)
-      );
+      const userTasks = tasks.filter(task => {
+        if (!task) return false;
+        
+        // Verificar si el usuario está asignado a la tarea
+        const isAssigned = task.assigned_to && task.assigned_to.id === userId;
+        
+        // Verificar si el usuario es el creador de la tarea
+        const isCreator = task.created_by && task.created_by.id === userId;
+        
+        return isAssigned || isCreator;
+      });
       
       const completedTasks = userTasks.filter(task => 
-        task.status && (
+        task && task.status && (
           task.status.toLowerCase().includes('complet') || 
           task.status.toLowerCase().includes('done') || 
           task.status.toLowerCase().includes('termin')

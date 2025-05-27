@@ -53,30 +53,30 @@ const Topbar: React.FC<TopbarProps> = ({ collapsed, toggleCollapsed }) => {
   };
 
   const pathMap: Record<string, string> = {
-    '/': 'Dashboard',
+    '/': 'Proyectos',
     '/projects': 'Proyectos',
-    '/tasks': 'Tareas',
+    '/statistics': 'Estadísticas',
     '/settings': 'Configuración',
   };
 
   const renderBreadcrumbs = () => {
     const pathSnippets = location.pathname.split('/').filter(Boolean);
 
-    if (pathSnippets.length === 0) {
-      return <Text fontWeight="medium" color={textColor}>Dashboard</Text>;
+    if (pathSnippets.length === 0 || (pathSnippets.length === 1 && pathSnippets[0] === 'projects')) {
+      return <Text fontWeight="medium" color={textColor}>Inicio</Text>;
     }
 
     return (
       <Flex align="center">
         <Box 
           as={Link} 
-          to="/" 
+          to="/projects" 
           color={breadcrumbColor} 
           _hover={{ color: breadcrumbHoverColor }}
           fontWeight="medium"
           fontSize="sm"
         >
-          Dashboard
+          Inicio
         </Box>
         {pathSnippets.map((segment, index) => {
           const url = `/${pathSnippets.slice(0, index + 1).join('/')}`;
@@ -135,7 +135,6 @@ const Topbar: React.FC<TopbarProps> = ({ collapsed, toggleCollapsed }) => {
       top={0}
       zIndex={10}
       width="100%"
-      transition="all 0.2s"
     >
       <Flex height="100%" align="center" justify="space-between">
         <Flex align="center">

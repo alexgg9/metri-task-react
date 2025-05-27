@@ -5,17 +5,21 @@ export interface Project {
   id: number;
   name: string;
   description: string;
-  start_date: string; 
-  end_date: string;  
-  status: 'active' | 'completed' | 'in progress'; 
+  start_date: string;
+  end_date: string;
+  status: 'active' | 'completed' | 'in progress';
   priority: 'low' | 'medium' | 'high';
   progress: number;
   user_id: number;
-  created_at: string;
-  updated_at: string;
+  created_at?: string;
+  updated_at?: string;
+  creator?: {
+    id: number;
+    name: string;
+    email: string;
+  };
   tasks?: Task[];
   users?: User[];
-  creator?: User;
 }
 
 export const PROJECT_ROLES = {

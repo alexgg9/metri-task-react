@@ -1,17 +1,20 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { User } from '../types/user';
 import { getCurrentUser } from '../services/userService';
-import { useNavigate } from 'react-router-dom';
+
+interface User {
+  id: number;
+  name: string;
+  email: string;
+  role: string;
+  avatar?: string | null;
+}
 
 interface AuthContextType {
   user: User | null;
   loading: boolean;
   error: string | null;
-  isAdmin: boolean;
-  isManager: boolean;
-  isMember: boolean;
-  hasPermission: (permission: string) => boolean;
-  updateUser: (user: User) => void;
+  setUser: (user: User | null) => void;
+  checkAuth: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -20,64 +23,45 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const navigate = useNavigate();
 
-  useEffect(() => {
-    const fetchUser = async () => {
-      console.log('Iniciando verificación de autenticación...');
+  const checkAuth = async () => {
+    try {
+      console.log('Verificando autenticación...');
       const token = localStorage.getItem('token');
-      
+      console.log('Token encontrado:', !!token);
+
       if (!token) {
-        console.log('No se encontró token, redirigiendo a login...');
+        console.log('No hay token, usuario no autenticado');
+        setUser(null);
         setLoading(false);
-        navigate('/auth');
         return;
       }
 
-      try {
-        console.log('Obteniendo datos del usuario...');
-        const userData = await getCurrentUser();
-        console.log('Usuario obtenido:', userData);
+      const userData = await getCurrentUser();
+      console.log('Usuario obtenido:', userData);
+      
+      if (userData) {
         setUser(userData);
         setError(null);
-      } catch (err) {
-        console.error('Error en la autenticación:', err);
-        setError('Error al cargar el usuario');
+      } else {
         setUser(null);
-        localStorage.removeItem('token');
-        navigate('/auth');
-      } finally {
-        setLoading(false);
+        setError('No se pudo obtener la información del usuario');
       }
-    };
-
-    fetchUser();
-  }, [navigate]);
-
-  const isAdmin = user?.role === 'admin';
-  const isManager = user?.role === 'manager';
-  const isMember = user?.role === 'member';
-
-  const hasPermission = (permission: string) => {
-    if (!user) return false;
-    return true;
+    } catch (err) {
+      console.error('Error al verificar autenticación:', err);
+      setUser(null);
+      setError('Error al verificar la autenticación');
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const updateUser = (newUser: User) => {
-    setUser(newUser);
-  };
+  useEffect(() => {
+    checkAuth();
+  }, []);
 
   return (
-    <AuthContext.Provider value={{
-      user,
-      loading,
-      error,
-      isAdmin,
-      isManager,
-      isMember,
-      hasPermission,
-      updateUser
-    }}>
+    <AuthContext.Provider value={{ user, loading, error, setUser, checkAuth }}>
       {children}
     </AuthContext.Provider>
   );

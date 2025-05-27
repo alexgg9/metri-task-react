@@ -19,7 +19,6 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
   
   return (
     <Flex h="100vh" overflow="hidden">
-      {/* Sidebar fijo */}
       <Box
         w={sidebarWidth}
         h="100vh"
@@ -34,8 +33,6 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
       >
         <Sidebar collapsed={collapsed} />
       </Box>
-      
-      {/* Contenido principal con topbar fijo */}
       <Box 
         ml={sidebarWidth} 
         w={`calc(100% - ${sidebarWidth})`} 
@@ -43,26 +40,10 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
         position="relative"
         transition="all 0.2s"
       >
-        {/* Topbar fijo */}
-        <Box
-          h="60px"
-          position="fixed"
-          top={0}
-          right={0}
-          left={sidebarWidth}
-          bg={useColorModeValue('white', 'gray.800')}
-          borderBottom="1px"
-          borderBottomColor={useColorModeValue('gray.200', 'gray.700')}
-          zIndex={5}
-          transition="left 0.2s"
-        >
-          <Topbar collapsed={collapsed} toggleCollapsed={toggleCollapsed} />
-        </Box>
-        
-        {/* Área de contenido con scroll */}
-        <Box
-          pt="60px"
-          h="100vh"
+        <Topbar collapsed={collapsed} toggleCollapsed={toggleCollapsed} />
+        <Box 
+          pt="64px"
+          h="calc(100vh - 64px)"
           overflowY="auto"
           bg={bgColor}
           px={4}

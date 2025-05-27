@@ -1,7 +1,8 @@
 import { useState } from "react";
 import { login, register } from "../services/authService";
 import { FiUser, FiEye, FiMail, FiLock, FiEyeOff, FiChevronLeft, FiCheckCircle, FiAlertTriangle } from 'react-icons/fi';
-import { useNavigate } from "react-router-dom"; 
+import { useNavigate } from "react-router-dom";
+import { useAuth } from "../contexts/AuthContext";
 
 export default function AuthForms() {
   const [isLogin, setIsLogin] = useState(true);
@@ -15,6 +16,7 @@ export default function AuthForms() {
   const [error, setError] = useState("");
 
   const navigate = useNavigate();
+  const { setUser } = useAuth();
 
   const resetFields = () => {
     setName("");
@@ -33,8 +35,18 @@ export default function AuthForms() {
 
     try {
       if (isLogin) {
-        await login(email, password);
-        navigate("/projects"); 
+        console.log('Iniciando proceso de login...');
+        const response = await login(email, password);
+        console.log('Login exitoso:', response);
+        
+        if (response.user) {
+          console.log('Usuario obtenido, actualizando contexto...');
+          setUser(response.user);
+          console.log('Redirigiendo a /projects...');
+          navigate("/projects", { replace: true });
+        } else {
+          throw new Error("No se pudo obtener la información del usuario");
+        }
       } else {
         if (password !== confirmPassword) {
           setError("Las contraseñas no coinciden");
@@ -45,8 +57,9 @@ export default function AuthForms() {
         setIsLogin(true);
         resetFields();
       }
-    } catch (err) {
-      setError(isLogin ? "Credenciales incorrectas." : "Error al registrar. Verifica los datos.");
+    } catch (err: any) {
+      console.error('Error en el login:', err);
+      setError(err.response?.data?.message || (isLogin ? "Credenciales incorrectas." : "Error al registrar. Verifica los datos."));
     } finally {
       setLoading(false);
     }
