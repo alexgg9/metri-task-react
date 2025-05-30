@@ -9,10 +9,14 @@ import {
   Icon,
   useColorModeValue,
   Tooltip,
-  Divider
+  Divider,
+  Avatar,
+  AvatarBadge
 } from '@chakra-ui/react';
-import { FiCalendar, FiUser, FiClock, FiTag } from 'react-icons/fi';
+import { FiCalendar, FiUser, FiClock, FiCheckCircle } from 'react-icons/fi';
 import { Task } from '../../types/task';
+import { format } from 'date-fns';
+import { es } from 'date-fns/locale';
 
 interface KanbanCardProps {
   task: Task;
@@ -22,16 +26,37 @@ const KanbanCard: React.FC<KanbanCardProps> = ({ task }) => {
   const bgColor = useColorModeValue('white', 'gray.700');
   const borderColor = useColorModeValue('gray.200', 'gray.600');
   const hoverBg = useColorModeValue('gray.50', 'gray.600');
-  const textColor = useColorModeValue('gray.600', 'gray.300');
+  const textColor = useColorModeValue('gray.700', 'white');
   const secondaryTextColor = useColorModeValue('gray.500', 'gray.400');
+  const cardShadow = useColorModeValue('sm', 'md');
 
-  const getPriorityColor = (priority: string) => {
-    switch (priority.toLowerCase()) {
+  console.log('Datos de la tarea:', {
+    id: task.id,
+    title: task.title,
+    assigned_to: task.assigned_to,
+    user_id: task.user_id
+  });
+
+  const getPriorityColor = (priority: Task['priority']) => {
+    switch (priority) {
       case 'high':
         return 'red';
       case 'medium':
         return 'orange';
       case 'low':
+        return 'green';
+      default:
+        return 'gray';
+    }
+  };
+
+  const getStatusColor = (status: Task['status']) => {
+    switch (status) {
+      case 'pending':
+        return 'yellow';
+      case 'in progress':
+        return 'blue';
+      case 'completed':
         return 'green';
       default:
         return 'gray';
@@ -58,6 +83,8 @@ const KanbanCard: React.FC<KanbanCardProps> = ({ task }) => {
     return formatDate(dateString);
   };
 
+  const isOverdue = task.due_date && new Date(task.due_date) < new Date();
+
   return (
     <Box
       bg={bgColor}
@@ -65,37 +92,64 @@ const KanbanCard: React.FC<KanbanCardProps> = ({ task }) => {
       borderRadius="lg"
       borderWidth="1px"
       borderColor={borderColor}
-      boxShadow="sm"
+      boxShadow={cardShadow}
       _hover={{
         transform: 'translateY(-2px)',
-        boxShadow: 'md',
+        boxShadow: 'lg',
         bg: hoverBg,
       }}
       transition="all 0.2s"
       cursor="pointer"
       width="100%"
+      position="relative"
     >
+      {task.status === 'completed' && (
+        <Box
+          position="absolute"
+          top={2}
+          right={2}
+          color="green.500"
+          zIndex={1}
+        >
+          <Icon as={FiCheckCircle} boxSize={5} />
+        </Box>
+      )}
+
       <VStack align="stretch" spacing={3}>
-        <Flex justify="space-between" align="center">
+        <Flex justify="space-between" align="start" gap={2}>
           <Text
             fontSize="md"
             fontWeight="semibold"
             color={textColor}
             noOfLines={2}
+            flex={1}
           >
-            {task.name}
+            {task.title} 
           </Text>
-          <Badge
-            colorScheme={getPriorityColor(task.priority)}
-            variant="subtle"
-            px={2}
-            py={0.5}
-            borderRadius="full"
-            fontSize="xs"
-          >
-            {task.priority === 'high' ? 'Alta' :
-             task.priority === 'medium' ? 'Media' : 'Baja'}
-          </Badge>
+          <HStack spacing={2}>
+            <Badge
+              colorScheme={getStatusColor(task.status)}
+              variant="subtle"
+              px={2}
+              py={0.5}
+              borderRadius="full"
+              fontSize="xs"
+            >
+              {task.status === 'completed' ? 'Completada' :
+               task.status === 'in progress' ? 'En progreso' : 'Pendiente'}
+            </Badge>
+            <Badge
+              colorScheme={getPriorityColor(task.priority)}
+              variant="subtle"
+              px={2}
+              py={0.5}
+              borderRadius="full"
+              fontSize="xs"
+            >
+              {task.priority === 'high' ? 'Alta' :
+               task.priority === 'medium' ? 'Media' : 'Baja'}
+            </Badge>
+          </HStack>
         </Flex>
 
         {task.description && (
@@ -113,47 +167,30 @@ const KanbanCard: React.FC<KanbanCardProps> = ({ task }) => {
         <VStack align="stretch" spacing={2}>
           <HStack spacing={2} color={secondaryTextColor}>
             <Icon as={FiCalendar} boxSize={4} />
-            <Text fontSize="sm">
-              {task.dueDate ? formatDate(task.dueDate) : 'Sin fecha límite'}
+            <Text fontSize="sm" color={isOverdue ? 'red.500' : secondaryTextColor}>
+              {task.due_date ? formatDate(task.due_date) : 'Sin fecha límite'}
             </Text>
           </HStack>
 
-          {task.dueDate && (
-            <HStack spacing={2} color={secondaryTextColor}>
+          {task.due_date && (
+            <HStack spacing={2} color={isOverdue ? 'red.500' : secondaryTextColor}>
               <Icon as={FiClock} boxSize={4} />
               <Text fontSize="sm">
-                {getTimeAgo(task.dueDate)}
+                {getTimeAgo(task.due_date)}
               </Text>
             </HStack>
           )}
 
-          {task.assignee && (
+          {task.assigned_to && (
             <HStack spacing={2} color={secondaryTextColor}>
-              <Icon as={FiUser} boxSize={4} />
+              <Avatar 
+                size="xs" 
+                name={task.assigned_to.name}
+                src={task.assigned_to.avatar}
+              />
               <Text fontSize="sm">
-                Asignado a: {task.assignee.name}
+                {task.assigned_to.name}
               </Text>
-            </HStack>
-          )}
-
-          {task.tags && task.tags.length > 0 && (
-            <HStack spacing={2} color={secondaryTextColor}>
-              <Icon as={FiTag} boxSize={4} />
-              <HStack spacing={1} wrap="wrap">
-                {task.tags.map((tag: string, index: number) => (
-                  <Badge
-                    key={index}
-                    colorScheme="blue"
-                    variant="subtle"
-                    fontSize="xs"
-                    px={1.5}
-                    py={0.5}
-                    borderRadius="full"
-                  >
-                    {tag}
-                  </Badge>
-                ))}
-              </HStack>
             </HStack>
           )}
         </VStack>

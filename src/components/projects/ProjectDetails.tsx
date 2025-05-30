@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import {
   Box,
@@ -51,61 +51,32 @@ import {
   FiGrid,
   FiUsers as FiTeam
 } from 'react-icons/fi';
-import { Project } from '../../types/project';
-import { getProjectById, deleteProject } from '../../services/projectService';
+import { deleteProject } from '../../services/projectService';
 import KanbanBoard from '../kanban/KanbanBoard';
 import { useProject } from '../../contexts/ProjectContext';
+import ProjectUsersModal from './ProjectUsersModal';
 
 const ProjectDetail: React.FC = () => {
-  // Hooks de React Router
+  // 1. Hooks de React Router
   const { projectId } = useParams<{ projectId: string }>();
   const navigate = useNavigate();
 
-  // Hooks de estado
-  const [project, setProject] = useState<Project | null>(null);
-  const [loading, setLoading] = useState(true);
-
-  // Hooks de Chakra UI
+  // 2. Hooks de Chakra UI
   const { isOpen, onOpen, onClose } = useDisclosure();
+  const { 
+    isOpen: isUsersModalOpen, 
+    onOpen: onUsersModalOpen, 
+    onClose: onUsersModalClose 
+  } = useDisclosure();
   const toast = useToast();
   const cardBg = useColorModeValue('white', 'gray.700');
   const borderColor = useColorModeValue('gray.200', 'gray.600');
   const textColor = useColorModeValue('gray.600', 'gray.300');
   const progressBg = useColorModeValue('gray.100', 'gray.600');
 
-  // Hooks de contexto
-  const { setCurrentProject } = useProject();
 
-  // Efectos
-  useEffect(() => {
-    const fetchProject = async () => {
-      if (!projectId) return;
-      
-      try {
-        const data = await getProjectById(Number(projectId));
-        setProject(data);
-        setCurrentProject(data);
-      } catch (error) {
-        console.error('Error al cargar el proyecto:', error);
-        toast({
-          title: 'Error',
-          description: 'No se pudo cargar el proyecto',
-          status: 'error',
-          duration: 5000,
-          isClosable: true,
-        });
-      } finally {
-        setLoading(false);
-      }
-    };
+  const { currentProject: project, loading, refreshProject } = useProject();
 
-    fetchProject();
-
-    // Limpiar el proyecto actual cuando se desmonte el componente
-    return () => {
-      setCurrentProject(null);
-    };
-  }, [projectId, toast, setCurrentProject]);
 
   const handleEditProject = () => {
     if (project) {
@@ -138,24 +109,6 @@ const ProjectDetail: React.FC = () => {
     }
     onClose();
   };
-
-  if (loading) {
-    return (
-      <Container maxW="container.xl" py={10}>
-        <Flex justify="center" align="center" h="50vh">
-          <Spinner size="xl" thickness="4px" color="blue.500" />
-        </Flex>
-      </Container>
-    );
-  }
-
-  if (!project) {
-    return (
-      <Container maxW="container.xl" py={10}>
-        <Text>No se encontró el proyecto</Text>
-      </Container>
-    );
-  }
 
   const getStatusColor = (status: string | undefined | null) => {
     if (!status) return 'gray';
@@ -202,6 +155,26 @@ const ProjectDetail: React.FC = () => {
     });
   };
 
+
+  if (loading) {
+    return (
+      <Container maxW="container.xl" py={10}>
+        <Flex justify="center" align="center" h="50vh">
+          <Spinner size="xl" thickness="4px" color="blue.500" />
+        </Flex>
+      </Container>
+    );
+  }
+
+  if (!project) {
+    return (
+      <Container maxW="container.xl" py={10}>
+        <Text>No se encontró el proyecto</Text>
+      </Container>
+    );
+  }
+
+
   return (
     <Container maxW="container.xl" py={8}>
       <Card bg={cardBg} boxShadow="sm" borderRadius="xl" borderWidth="1px" borderColor={borderColor}>
@@ -209,6 +182,16 @@ const ProjectDetail: React.FC = () => {
           <Flex justify="space-between" align="center" mb={8}>
             <Heading as="h1" size="xl" color={textColor}>{project.name}</Heading>
             <HStack spacing={3}>
+              <Button 
+                leftIcon={<FiUsers />} 
+                colorScheme="purple" 
+                variant="outline"
+                onClick={onUsersModalOpen}
+                _hover={{ transform: 'translateY(-1px)', boxShadow: 'md' }}
+                transition="all 0.2s"
+              >
+                Gestionar Usuarios
+              </Button>
               <Button 
                 leftIcon={<FiEdit />} 
                 colorScheme="blue" 
@@ -465,7 +448,7 @@ const ProjectDetail: React.FC = () => {
               variant="ghost" 
               mr={3} 
               onClick={onClose}
-              _hover={{ bg: useColorModeValue('gray.100', 'gray.700') }}
+              _hover={{ bg: 'gray.100' }}
             >
               Cancelar
             </Button>
@@ -480,6 +463,13 @@ const ProjectDetail: React.FC = () => {
           </ModalFooter>
         </ModalContent>
       </Modal>
+
+      <ProjectUsersModal
+        isOpen={isUsersModalOpen}
+        onClose={onUsersModalClose}
+        projectId={project.id}
+        onUsersUpdated={refreshProject}
+      />
     </Container>
   );
 };

@@ -1,9 +1,10 @@
 import axios from "axios";
 import { Project } from "../types/project";
 import { Task } from "../types/task";
+import { User } from "../types/user";
 import { getCurrentUser } from "./userService";
 
-const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8000/api";
+const API_URL = import.meta.env.VITE_API_URL;
 const getToken = () => localStorage.getItem("token");
 
 const authHeader = () => ({
@@ -55,5 +56,33 @@ export const deleteProject = async (id: number) => {
 
 export const getProjectTasks = async (projectId: number): Promise<Task[]> => {
   const res = await axios.get(`${API_URL}/projects/${projectId}/tasks`, authHeader());
+  return res.data;
+};
+
+// Funciones para gestionar usuarios del proyecto
+export const getProjectUsers = async (projectId: number): Promise<User[]> => {
+  const res = await axios.get(`${API_URL}/projects/${projectId}/users`, authHeader());
+  return res.data;
+};
+
+export const addUserToProject = async (projectId: number, userId: number): Promise<Project> => {
+  const res = await axios.post(
+    `${API_URL}/projects/${projectId}/users`,
+    { user_id: userId },
+    authHeader()
+  );
+  return res.data;
+};
+
+export const removeUserFromProject = async (projectId: number, userId: number): Promise<Project> => {
+  const res = await axios.delete(
+    `${API_URL}/projects/${projectId}/users/${userId}`,
+    authHeader()
+  );
+  return res.data;
+};
+
+export const getAllUsers = async (): Promise<User[]> => {
+  const res = await axios.get(`${API_URL}/users`, authHeader());
   return res.data;
 };

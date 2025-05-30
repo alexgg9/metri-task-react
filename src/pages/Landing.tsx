@@ -1,314 +1,299 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-
+import { motion } from 'framer-motion';
+import { FiArrowRight, FiUsers, FiBarChart2, FiClock, FiCalendar, FiCheck, FiStar, FiTrendingUp, FiShield } from 'react-icons/fi';
 
 const LandingPage: React.FC = () => {
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
-
 
   useEffect(() => {
     const handleScroll = () => {
-      if (window.scrollY > 10) {
-        setIsScrolled(true);
-      } else {
-        setIsScrolled(false);
-      }
+      setIsScrolled(window.scrollY > 10);
     };
-
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
+  const fadeIn = {
+    hidden: { opacity: 0, y: 20 },
+    visible: { opacity: 1, y: 0 }
+  };
+
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
       {/* Navbar */}
-      <nav 
-        className={`fixed w-full z-30 transition-all duration-300 ${
-          isScrolled ? 'bg-white shadow-md py-2' : 'bg-transparent py-4'
-        }`}
-      >
+      <nav className={`fixed w-full z-50 transition-all duration-300 ${
+        isScrolled ? 'bg-white/80 backdrop-blur-md shadow-lg' : 'bg-transparent'
+      }`}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16">
-            <div className="flex items-center">
-              <div className="flex-shrink-0">
-                <span className="text-2xl font-bold bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 text-transparent bg-clip-text">
-                  MetriTask
-                </span>
-              </div>
-            </div>
-            <div className="hidden md:block">
-              <div className="ml-10 flex items-baseline space-x-4">
-                <a href="#features" className="text-gray-700 hover:text-indigo-600 px-3 py-2 rounded-md text-sm font-medium">
-                  Características
-                </a>
-                <a href="#testimonials" className="text-gray-700 hover:text-indigo-600 px-3 py-2 rounded-md text-sm font-medium">
-                  Testimonios
-                </a>
-                <a href="#pricing" className="text-gray-700 hover:text-indigo-600 px-3 py-2 rounded-md text-sm font-medium">
-                  Precios
-                </a>
-                <Link to="/login" className="text-gray-700 hover:text-indigo-600 px-3 py-2 rounded-md text-sm font-medium">
-                  Iniciar Sesión
-                </Link>
-                <Link to="/register" className="bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 text-white px-4 py-2 rounded-md text-sm font-medium hover:opacity-90 transition-all">
-                  Registrarse
-                </Link>
-              </div>
-            </div>
-            <div className="md:hidden">
-              <button
-                onClick={() => setIsMenuOpen(!isMenuOpen)}
-                className="inline-flex items-center justify-center p-2 rounded-md text-gray-700 hover:text-indigo-600 focus:outline-none"
+          <div className="flex justify-between items-center h-16">
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              className="flex items-center"
+            >
+              <span className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 text-transparent bg-clip-text">
+                MetriTask
+              </span>
+            </motion.div>
+            <div className="hidden md:flex items-center space-x-8">
+              <a href="#features" className="text-gray-600 hover:text-blue-600 transition-colors">Características</a>
+              <a href="#pricing" className="text-gray-600 hover:text-blue-600 transition-colors">Precios</a>
+              <Link to="/auth" className="text-gray-600 hover:text-blue-600 transition-colors">Iniciar Sesión</Link>
+              <Link 
+                to="/auth" 
+                className="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-6 py-2 rounded-full hover:shadow-lg transition-all duration-300 transform hover:scale-105"
               >
-                <svg
-                  className="h-6 w-6"
-                  stroke="currentColor"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                >
-                  {isMenuOpen ? (
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth="2"
-                      d="M6 18L18 6M6 6l12 12"
-                    />
-                  ) : (
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth="2"
-                      d="M4 6h16M4 12h16M4 18h16"
-                    />
-                  )}
-                </svg>
-              </button>
+                Comenzar
+              </Link>
             </div>
           </div>
         </div>
-        {/* Mobile menu */}
-        {isMenuOpen && (
-          <div className="md:hidden bg-white shadow-lg">
-            <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3">
-              <a href="#features" className="text-gray-700 hover:text-indigo-600 block px-3 py-2 rounded-md text-base font-medium">
-                Características
-              </a>
-              <a href="#testimonials" className="text-gray-700 hover:text-indigo-600 block px-3 py-2 rounded-md text-base font-medium">
-                Testimonios
-              </a>
-              <a href="#pricing" className="text-gray-700 hover:text-indigo-600 block px-3 py-2 rounded-md text-base font-medium">
-                Precios
-              </a>
-              <Link to="/login" className="text-gray-700 hover:text-indigo-600 block px-3 py-2 rounded-md text-base font-medium">
-                Iniciar Sesión
-              </Link>
-              <Link to="/register" className="bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 text-white block px-3 py-2 rounded-md text-base font-medium hover:opacity-90 transition-all">
-                Registrarse
-              </Link>
-            </div>
-          </div>
-        )}
       </nav>
 
       {/* Hero Section */}
-      <div className="relative bg-gray-50 overflow-hidden">
+      <section className="pt-32 pb-20 px-4 sm:px-6 lg:px-8">
         <div className="max-w-7xl mx-auto">
-          <div className="relative z-10 pb-8 bg-gray-50 sm:pb-16 md:pb-20 lg:max-w-2xl lg:w-full lg:pb-28 xl:pb-32">
-            <div className="pt-32 sm:pt-36 md:pt-40 lg:pt-48">
-              <div className="sm:text-center lg:text-left">
-                <h1 className="text-4xl tracking-tight font-extrabold text-gray-900 sm:text-5xl md:text-6xl">
-                  <span className="block">Gestiona proyectos con</span>
-                  <span className="block bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 text-transparent bg-clip-text">
-                    precisión métrica
-                  </span>
-                </h1>
-                <p className="mt-3 text-base text-gray-500 sm:mt-5 sm:text-lg sm:max-w-xl sm:mx-auto md:mt-5 md:text-xl lg:mx-0">
-                  MetriTask te ofrece un control total sobre tus proyectos y tareas con métricas 
-                  avanzadas, colaboración en tiempo real y una interfaz intuitiva y moderna.
-                </p>
-                <div className="mt-5 sm:mt-8 sm:flex sm:justify-center lg:justify-start">
-                  <div className="rounded-md shadow">
-                    <Link
-                      to="/register"
-                      className="w-full flex items-center justify-center px-8 py-3 border border-transparent text-base font-medium rounded-md text-white bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 md:py-4 md:text-lg md:px-10"
-                    >
-                      Comenzar gratis
-                    </Link>
-                  </div>
-                  <div className="mt-3 sm:mt-0 sm:ml-3">
-                    <a
-                      href="#features"
-                      className="w-full flex items-center justify-center px-8 py-3 border border-transparent text-base font-medium rounded-md text-indigo-600 bg-white hover:bg-gray-50 md:py-4 md:text-lg md:px-10"
-                    >
-                      Ver demo
-                    </a>
-                  </div>
-                </div>
-              </div>
-            </div>
+          <div className="text-center">
+            <motion.h1 
+              initial="hidden"
+              animate="visible"
+              variants={fadeIn}
+              className="text-5xl md:text-6xl font-extrabold text-gray-900 mb-8"
+            >
+              <span className="block">Gestiona tus proyectos con</span>
+              <span className="block bg-gradient-to-r from-blue-600 to-purple-600 text-transparent bg-clip-text">
+                precisión y eficiencia
+              </span>
+            </motion.h1>
+            <motion.p 
+              initial="hidden"
+              animate="visible"
+              variants={fadeIn}
+              transition={{ delay: 0.2 }}
+              className="text-xl text-gray-600 max-w-3xl mx-auto mb-12"
+            >
+              MetriTask te permite gestionar proyectos y tareas de manera eficiente, con seguimiento de fechas, 
+              asignación de tareas y métricas de rendimiento en tiempo real.
+            </motion.p>
+            <motion.div 
+              initial="hidden"
+              animate="visible"
+              variants={fadeIn}
+              transition={{ delay: 0.4 }}
+              className="flex flex-col sm:flex-row justify-center gap-4"
+            >
+              <Link 
+                to="/auth" 
+                className="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-8 py-4 rounded-full text-lg font-semibold hover:shadow-xl transition-all duration-300 transform hover:scale-105 flex items-center justify-center"
+              >
+                Comenzar gratis
+                <FiArrowRight className="ml-2" />
+              </Link>
+              <a 
+                href="#demo" 
+                className="bg-white text-gray-800 px-8 py-4 rounded-full text-lg font-semibold border-2 border-gray-200 hover:border-blue-600 hover:text-blue-600 transition-all duration-300"
+              >
+                Ver demo
+              </a>
+            </motion.div>
           </div>
         </div>
-        <div className="lg:absolute lg:inset-y-0 lg:right-0 lg:w-1/2">
-          <img
-            className="h-56 w-full object-cover sm:h-72 md:h-96 lg:w-full lg:h-full"
-            src="/api/placeholder/800/600"
-            alt=""
-          />
+      </section>
+
+      {/* Stats Section */}
+      <section className="py-20 bg-gray-50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <motion.div 
+              initial="hidden"
+              whileInView="visible"
+              viewport={{ once: true }}
+              variants={fadeIn}
+              className="bg-white p-8 rounded-2xl shadow-lg hover:shadow-xl transition-shadow"
+            >
+              <div className="text-blue-600 mb-4">
+                <FiTrendingUp className="w-8 h-8" />
+              </div>
+              <h3 className="text-2xl font-bold text-gray-900 mb-2">100%</h3>
+              <p className="text-gray-600">Control de proyectos</p>
+            </motion.div>
+            <motion.div 
+              initial="hidden"
+              whileInView="visible"
+              viewport={{ once: true }}
+              variants={fadeIn}
+              transition={{ delay: 0.2 }}
+              className="bg-white p-8 rounded-2xl shadow-lg hover:shadow-xl transition-shadow"
+            >
+              <div className="text-purple-600 mb-4">
+                <FiUsers className="w-8 h-8" />
+              </div>
+              <h3 className="text-2xl font-bold text-gray-900 mb-2">Gestión</h3>
+              <p className="text-gray-600">De tareas y proyectos</p>
+            </motion.div>
+            <motion.div 
+              initial="hidden"
+              whileInView="visible"
+              viewport={{ once: true }}
+              variants={fadeIn}
+              transition={{ delay: 0.4 }}
+              className="bg-white p-8 rounded-2xl shadow-lg hover:shadow-xl transition-shadow"
+            >
+              <div className="text-blue-600 mb-4">
+                <FiStar className="w-8 h-8" />
+              </div>
+              <h3 className="text-2xl font-bold text-gray-900 mb-2">API REST</h3>
+              <p className="text-gray-600">Integración completa</p>
+            </motion.div>
+          </div>
         </div>
-      </div>
+      </section>
 
       {/* Features Section */}
-      <div id="features" className="py-12 bg-white">
+      <section id="features" className="py-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="lg:text-center">
-            <h2 className="text-base text-indigo-600 font-semibold tracking-wide uppercase">Características</h2>
-            <p className="mt-2 text-3xl leading-8 font-extrabold tracking-tight text-gray-900 sm:text-4xl">
-              Todo lo que necesitas para el éxito de tus proyectos
-            </p>
-            <p className="mt-4 max-w-2xl text-xl text-gray-500 lg:mx-auto">
-              MetriTask combina potentes herramientas con una interfaz sencilla para maximizar la productividad de tu equipo.
-            </p>
-          </div>
-
-          <div className="mt-10">
-            <div className="space-y-10 md:space-y-0 md:grid md:grid-cols-2 md:gap-x-8 md:gap-y-10">
-              {/* Feature 1 */}
-              <div className="relative">
-                <div className="absolute flex items-center justify-center h-12 w-12 rounded-md bg-indigo-500 text-white">
-                  <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
-                  </svg>
-                </div>
-                <div className="ml-16">
-                  <h3 className="text-lg leading-6 font-medium text-gray-900">Tableros Kanban avanzados</h3>
-                  <p className="mt-2 text-base text-gray-500">
-                    Visualiza el progreso de tus proyectos con tableros Kanban personalizables y adaptados a tu flujo de trabajo.
-                  </p>
-                </div>
-              </div>
-
-              {/* Feature 2 */}
-              <div className="relative">
-                <div className="absolute flex items-center justify-center h-12 w-12 rounded-md bg-indigo-500 text-white">
-                  <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-                  </svg>
-                </div>
-                <div className="ml-16">
-                  <h3 className="text-lg leading-6 font-medium text-gray-900">Métricas en tiempo real</h3>
-                  <p className="mt-2 text-base text-gray-500">
-                    Monitorea el rendimiento y progreso con gráficos interactivos y métricas detalladas para la toma de decisiones.
-                  </p>
-                </div>
-              </div>
-
-              {/* Feature 3 */}
-              <div className="relative">
-                <div className="absolute flex items-center justify-center h-12 w-12 rounded-md bg-indigo-500 text-white">
-                  <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-                  </svg>
-                </div>
-                <div className="ml-16">
-                  <h3 className="text-lg leading-6 font-medium text-gray-900">Colaboración sin fricciones</h3>
-                  <p className="mt-2 text-base text-gray-500">
-                    Trabaja con tu equipo en tiempo real, comparte archivos y mantén todas las conversaciones organizadas.
-                  </p>
-                </div>
-              </div>
-
-              {/* Feature 4 */}
-              <div className="relative">
-                <div className="absolute flex items-center justify-center h-12 w-12 rounded-md bg-indigo-500 text-white">
-                  <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                  </svg>
-                </div>
-                <div className="ml-16">
-                  <h3 className="text-lg leading-6 font-medium text-gray-900">Planificación inteligente</h3>
-                  <p className="mt-2 text-base text-gray-500">
-                    Calendario integrado con recordatorios, plazos y estimaciones de tiempo para una gestión óptima.
-                  </p>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Dashboard Preview */}
-      <div className="bg-gray-100 py-16">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center">
-            <h2 className="text-3xl font-extrabold text-gray-900">
-              Interfaz potente y sencilla
+          <motion.div 
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true }}
+            variants={fadeIn}
+            className="text-center mb-16"
+          >
+            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+              Todo lo que necesitas para el éxito
             </h2>
-            <p className="mt-4 text-lg text-gray-500">
-              Descubre cómo MetriTask convierte la gestión de proyectos complejos en una experiencia intuitiva.
+            <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+              Herramientas poderosas diseñadas para equipos modernos
             </p>
-          </div>
-          <div className="mt-10">
-            <div className="rounded-lg shadow-xl overflow-hidden">
-              <img 
-                className="w-full" 
-                src="/api/placeholder/1200/600" 
-                alt="Dashboard de MetriTask" 
-              />
-            </div>
-          </div>
-        </div>
-      </div>
+          </motion.div>
 
-
-      {/* Call to Action */}
-      <div className="bg-indigo-600">
-        <div className="max-w-7xl mx-auto py-12 px-4 sm:px-6 lg:flex lg:items-center lg:justify-between lg:py-16 lg:px-8">
-          <h2 className="text-3xl font-extrabold tracking-tight text-white sm:text-4xl">
-            <span className="block">¿Listo para optimizar tu flujo de trabajo?</span>
-            <span className="block text-indigo-200">Empieza a usar MetriTask hoy mismo.</span>
-          </h2>
-          <div className="mt-8 flex lg:mt-0 lg:flex-shrink-0">
-            <div className="inline-flex rounded-md shadow">
-              <Link
-                to="/register"
-                className="inline-flex items-center justify-center px-5 py-3 border border-transparent text-base font-medium rounded-md text-indigo-600 bg-white hover:bg-indigo-50"
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {[
+              {
+                icon: <FiBarChart2 className="w-6 h-6" />,
+                title: "Gestión de Proyectos",
+                description: "Crea y gestiona proyectos con fechas de inicio y fin, asignación de tareas y seguimiento de progreso"
+              },
+              {
+                icon: <FiUsers className="w-6 h-6" />,
+                title: "Gestión de Tareas",
+                description: "Organiza y asigna tareas dentro de cada proyecto, con seguimiento de estado y prioridades"
+              },
+              {
+                icon: <FiClock className="w-6 h-6" />,
+                title: "Control de Fechas",
+                description: "Gestiona fechas de inicio y fin para proyectos y tareas con precisión"
+              },
+              {
+                icon: <FiCalendar className="w-6 h-6" />,
+                title: "API RESTful",
+                description: "Integración completa mediante API REST con autenticación JWT"
+              },
+              {
+                icon: <FiShield className="w-6 h-6" />,
+                title: "Autenticación Segura",
+                description: "Sistema de autenticación con tokens JWT para máxima seguridad"
+              },
+              {
+                icon: <FiCheck className="w-6 h-6" />,
+                title: "Interfaz React",
+                description: "Frontend moderno desarrollado con React y TypeScript"
+              }
+            ].map((feature, index) => (
+              <motion.div
+                key={index}
+                initial="hidden"
+                whileInView="visible"
+                viewport={{ once: true }}
+                variants={fadeIn}
+                transition={{ delay: index * 0.1 }}
+                className="bg-white p-8 rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1"
               >
-                Comenzar ahora
-              </Link>
-            </div>
+                <div className="text-blue-600 mb-4">
+                  {feature.icon}
+                </div>
+                <h3 className="text-xl font-semibold text-gray-900 mb-2">
+                  {feature.title}
+                </h3>
+                <p className="text-gray-600">
+                  {feature.description}
+                </p>
+              </motion.div>
+            ))}
           </div>
         </div>
-      </div>
+      </section>
+
+      {/* CTA Section */}
+      <section className="py-20 bg-gradient-to-r from-blue-600 to-purple-600">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+          <motion.div
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true }}
+            variants={fadeIn}
+          >
+            <h2 className="text-3xl md:text-4xl font-bold text-white mb-8">
+              ¿Listo para gestionar tus proyectos?
+            </h2>
+            <p className="text-xl text-blue-100 mb-12 max-w-3xl mx-auto">
+              Comienza a organizar tus proyectos y tareas con MetriTask de manera eficiente y profesional
+            </p>
+            <Link
+              to="/auth"
+              className="inline-flex items-center justify-center px-8 py-4 bg-white text-blue-600 rounded-full text-lg font-semibold hover:shadow-xl transition-all duration-300 transform hover:scale-105"
+            >
+              Comenzar ahora
+              <FiArrowRight className="ml-2" />
+            </Link>
+          </motion.div>
+        </div>
+      </section>
 
       {/* Footer */}
-      <footer className="bg-white">
-        <div className="max-w-7xl mx-auto py-12 px-4 overflow-hidden sm:px-6 lg:px-8">
-          <nav className="-mx-5 -my-2 flex flex-wrap justify-center" aria-label="Footer">
-            <div className="px-5 py-2">
-              <a href="#features" className="text-base text-gray-500 hover:text-gray-900">
-                Características
-              </a>
+      <footer className="bg-gray-900 text-gray-300 py-12">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
+            <div>
+              <h3 className="text-white text-lg font-semibold mb-4">MetriTask</h3>
+              <p className="text-gray-400">
+                La plataforma definitiva para la gestión de proyectos
+              </p>
             </div>
-            <div className="px-5 py-2">
-              <a href="#pricing" className="text-base text-gray-500 hover:text-gray-900">
-                Precios
-              </a>
+            <div>
+              <h4 className="text-white text-lg font-semibold mb-4">Producto</h4>
+              <ul className="space-y-2">
+                <li><a href="#features" className="hover:text-white transition-colors">Características</a></li>
+                <li><a href="#pricing" className="hover:text-white transition-colors">Precios</a></li>
+                <li><a href="#demo" className="hover:text-white transition-colors">Demo</a></li>
+              </ul>
             </div>
-            <div className="px-5 py-2">
-              <Link to="/contact" className="text-base text-gray-500 hover:text-gray-900">
-                Contacto
-              </Link>
+            <div>
+              <h4 className="text-white text-lg font-semibold mb-4">Compañía</h4>
+              <ul className="space-y-2">
+                <li><a href="#" className="hover:text-white transition-colors">Sobre nosotros</a></li>
+                <li><a href="#" className="hover:text-white transition-colors">Blog</a></li>
+                <li><a href="#" className="hover:text-white transition-colors">Contacto</a></li>
+              </ul>
             </div>
-          </nav>
-          <p className="mt-8 text-center text-base text-gray-400">
-            &copy; 2025 MetriTask. Todos los derechos reservados.
-          </p>
+            <div>
+              <h4 className="text-white text-lg font-semibold mb-4">Legal</h4>
+              <ul className="space-y-2">
+                <li><a href="#" className="hover:text-white transition-colors">Privacidad</a></li>
+                <li><a href="#" className="hover:text-white transition-colors">Términos</a></li>
+                <li><a href="#" className="hover:text-white transition-colors">Cookies</a></li>
+              </ul>
+            </div>
+          </div>
+          <div className="mt-12 pt-8 border-t border-gray-800 text-center">
+            <p>&copy; {new Date().getFullYear()} MetriTask. Todos los derechos reservados.</p>
+          </div>
         </div>
       </footer>
     </div>
   );
-}
+};
 
 export default LandingPage;
 

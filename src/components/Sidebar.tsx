@@ -14,7 +14,12 @@ import {
 import {
   FiHome,
   FiFolder,
-  FiBarChart2
+  FiBarChart2,
+  FiCalendar,
+  FiUsers,
+  FiSettings,
+  FiBell,
+  FiCheckSquare
 } from 'react-icons/fi';
 
 interface SidebarProps {
@@ -36,9 +41,34 @@ const Sidebar: React.FC<SidebarProps> = ({ collapsed }) => {
       label: 'Proyectos'
     },
     {
+      path: '/tasks',
+      icon: FiCheckSquare,
+      label: 'Tareas'
+    },
+    {
+      path: '/calendar',
+      icon: FiCalendar,
+      label: 'Calendario'
+    },
+    {
+      path: '/team',
+      icon: FiUsers,
+      label: 'Equipo'
+    },
+    {
       path: '/statistics',
       icon: FiBarChart2,
       label: 'Estadísticas'
+    },
+    {
+      path: '/notifications',
+      icon: FiBell,
+      label: 'Notificaciones'
+    },
+    {
+      path: '/settings',
+      icon: FiSettings,
+      label: 'Configuración'
     }
   ];
 

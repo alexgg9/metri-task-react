@@ -5,18 +5,33 @@ import {
   SimpleGrid,
   useDisclosure,
   useColorModeValue,
-  Text,
   HStack,
-  Icon
+  Icon,
+  Spinner,
+  Center,
+  useToast,
+  Card,
+  CardBody,
+  Heading,
+  VStack,
+  Badge,
+  Flex,
 } from '@chakra-ui/react';
-import { DndContext, DragEndEvent, DragOverlay, DragStartEvent, MouseSensor, TouchSensor, useSensor, useSensors } from '@dnd-kit/core';
-import { SortableContext, arrayMove } from '@dnd-kit/sortable';
-import { FiPlus } from 'react-icons/fi';
+import {
+  DndContext,
+  DragEndEvent,
+  DragOverlay,
+  DragStartEvent,
+  MouseSensor,
+  TouchSensor,
+  useSensor,
+  useSensors,
+} from '@dnd-kit/core';
+import { FiPlus, FiList, FiClock, FiCheckCircle } from 'react-icons/fi';
 import { Task } from '../../types/task';
 import { getTasksByProjectId, updateTask } from '../../services/taskService';
 import KanbanColumn from './KanbanColumn';
 import KanbanCard from './KanbanCard';
-import SortableTask from './SortableTask';
 import CreateTaskModal from './CreateTaskModal';
 
 interface KanbanBoardProps {
@@ -24,45 +39,59 @@ interface KanbanBoardProps {
 }
 
 const KanbanBoard: React.FC<KanbanBoardProps> = ({ projectId }) => {
-  // Hooks de estado
   const [tasks, setTasks] = useState<Task[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeTask, setActiveTask] = useState<Task | null>(null);
 
-  // Hooks de Chakra UI
   const { isOpen, onOpen, onClose } = useDisclosure();
-  const bgColor = useColorModeValue('white', 'gray.700');
-  const borderColor = useColorModeValue('gray.200', 'gray.600');
+  const toast = useToast();
 
-  // Sensores para drag and drop
+  const borderColor = useColorModeValue('gray.200', 'gray.600');
+  const textColor = useColorModeValue('gray.700', 'white');
+  const cardBg = useColorModeValue('white', 'gray.700');
+
+
+  const pendingColumnBg = useColorModeValue('gray.50', 'gray.800');
+  const pendingHeaderBg = useColorModeValue('gray.100', 'gray.700');
+  const inProgressColumnBg = useColorModeValue('blue.50', 'blue.900');
+  const inProgressHeaderBg = useColorModeValue('blue.100', 'blue.800');
+  const completedColumnBg = useColorModeValue('green.50', 'green.900');
+  const completedHeaderBg = useColorModeValue('green.100', 'green.800');
+
   const mouseSensor = useSensor(MouseSensor, {
-    activationConstraint: {
-      distance: 10,
-    },
+    activationConstraint: { distance: 10 },
   });
   const touchSensor = useSensor(TouchSensor, {
-    activationConstraint: {
-      delay: 250,
-      tolerance: 5,
-    },
+    activationConstraint: { delay: 250, tolerance: 5 },
   });
   const sensors = useSensors(mouseSensor, touchSensor);
 
-  // Funciones
   const fetchTasks = useCallback(async () => {
+    setLoading(true);
     try {
       const data = await getTasksByProjectId(projectId);
-      setTasks(data);
+      if (!Array.isArray(data)) {
+        setTasks([]);
+        return;
+      }
+      const validTasks = data.filter(task => task && typeof task.id === 'number' && typeof task.title === 'string' && typeof task.status === 'string');
+      setTasks(validTasks);
     } catch (error) {
-      console.error('Error al cargar las tareas:', error);
+      toast({
+        title: 'Error',
+        description: error instanceof Error ? error.message : 'No se pudieron cargar las tareas.',
+        status: 'error',
+        duration: 5000,
+        isClosable: true,
+      });
+      setTasks([]);
     } finally {
       setLoading(false);
     }
-  }, [projectId]);
+  }, [projectId, toast]);
 
   const handleDragStart = useCallback((event: DragStartEvent) => {
-    const { active } = event;
-    const task = tasks.find(t => t.id.toString() === active.id);
+    const task = tasks.find((t) => t.id.toString() === event.active.id);
     if (task) {
       setActiveTask(task);
     }
@@ -70,96 +99,149 @@ const KanbanBoard: React.FC<KanbanBoardProps> = ({ projectId }) => {
 
   const handleDragEnd = useCallback(async (event: DragEndEvent) => {
     const { active, over } = event;
-    
     if (!over) return;
 
-    const activeTask = tasks.find(t => t.id.toString() === active.id);
-    if (!activeTask) return;
+    const draggedTask = tasks.find((t) => t.id.toString() === active.id);
+    if (!draggedTask) return;
 
-    const newStatus = over.id as 'pending' | 'in_progress' | 'completed';
-    
-    if (activeTask.status !== newStatus) {
-      try {
-        await updateTask(activeTask.id, { ...activeTask, status: newStatus });
-        setTasks(tasks.map(task => 
-          task.id === activeTask.id ? { ...task, status: newStatus } : task
-        ));
-      } catch (error) {
-        console.error('Error al actualizar la tarea:', error);
-      }
+    const statusMap: { [key: string]: Task['status'] } = {
+      'pending': 'pending',
+      'in_progress': 'in progress',
+      'completed': 'completed'
+    };
+
+    const columnId = String(over.id);
+    const newStatus = statusMap[columnId];
+
+    if (!newStatus) {
+      toast({
+        title: 'Estado inválido',
+        description: `El estado "${columnId}" no es reconocido.`,
+        status: 'warning',
+        duration: 5000,
+        isClosable: true,
+      });
+      return;
     }
-    
-    setActiveTask(null);
-  }, [tasks]);
 
-  // Efectos
+    if (draggedTask.status === newStatus) {
+      setActiveTask(null);
+      return;
+    }
+
+    const updatedTask: Task = {
+      ...draggedTask,
+      status: newStatus,
+      user_id: draggedTask.user_id || null,
+      project_id: draggedTask.project_id
+    };
+
+    const updatedTasks = tasks.map((t) => t.id === draggedTask.id ? updatedTask : t);
+    setTasks(updatedTasks);
+
+    try {
+      await updateTask(draggedTask.id, updatedTask);
+    } catch (error) {
+      toast({
+        title: 'Error',
+        description: error instanceof Error ? error.message : 'No se pudo actualizar el estado de la tarea.',
+        status: 'error',
+        duration: 5000,
+        isClosable: true,
+      });
+      setTasks(tasks);
+    } finally {
+      setActiveTask(null);
+    }
+  }, [tasks, toast]);
+
   useEffect(() => {
     fetchTasks();
   }, [fetchTasks]);
 
-  // Filtrado de tareas
-  const pendingTasks = tasks.filter(task => task.status === 'pending');
-  const inProgressTasks = tasks.filter(task => task.status === 'in_progress');
-  const completedTasks = tasks.filter(task => task.status === 'completed');
+  const pendingTasks = tasks.filter((t) => t.status === 'pending');
+  const inProgressTasks = tasks.filter((t) => t.status === 'in progress');
+  const completedTasks = tasks.filter((t) => t.status === 'completed');
 
   if (loading) {
-    return <Box>Cargando...</Box>;
+    return (
+      <Center h="60vh">
+        <Spinner size="xl" color="blue.500" />
+      </Center>
+    );
   }
 
   return (
-    <Box>
-      <HStack justify="space-between" mb={6}>
-        <Text fontSize="xl" fontWeight="bold" color={useColorModeValue('gray.700', 'white')}>
-          Tablero Kanban
-        </Text>
-        <Button
-          leftIcon={<Icon as={FiPlus} />}
-          colorScheme="blue"
-          size="sm"
-          onClick={onOpen}
-          _hover={{ transform: 'translateY(-1px)', boxShadow: 'md' }}
-          transition="all 0.2s"
-        >
-          Nueva Tarea
-        </Button>
-      </HStack>
+    <Card bg={cardBg} borderWidth="1px" borderColor={borderColor} borderRadius="xl" overflow="hidden">
+      <CardBody>
+        <VStack spacing={6} align="stretch">
+          <Flex justify="space-between" align="center">
+            <HStack spacing={4}>
+              <Heading size="md" color={textColor}>Tablero Kanban</Heading>
+              <Badge colorScheme="blue" variant="subtle" px={2} py={1} borderRadius="full">
+                {tasks.length} tareas
+              </Badge>
+            </HStack>
+            <Button
+              leftIcon={<Icon as={FiPlus} />}
+              colorScheme="blue"
+              size="sm"
+              onClick={onOpen}
+              _hover={{ transform: 'translateY(-1px)', boxShadow: 'md' }}
+              transition="all 0.2s"
+            >
+              Nueva Tarea
+            </Button>
+          </Flex>
 
-      <DndContext
-        sensors={sensors}
-        onDragStart={handleDragStart}
-        onDragEnd={handleDragEnd}
-      >
-        <SimpleGrid columns={{ base: 1, md: 3 }} spacing={6}>
-          <KanbanColumn
-            id="pending"
-            title="Pendientes"
-            tasks={pendingTasks}
-            columnBg="gray.50"
-            headerBg="gray.100"
-            borderColor={borderColor}
-          />
-          <KanbanColumn
-            id="in_progress"
-            title="En Progreso"
-            tasks={inProgressTasks}
-            columnBg="blue.50"
-            headerBg="blue.100"
-            borderColor={borderColor}
-          />
-          <KanbanColumn
-            id="completed"
-            title="Completadas"
-            tasks={completedTasks}
-            columnBg="green.50"
-            headerBg="green.100"
-            borderColor={borderColor}
-          />
-        </SimpleGrid>
+          <DndContext
+            sensors={sensors}
+            onDragStart={handleDragStart}
+            onDragEnd={handleDragEnd}
+          >
+            <SimpleGrid columns={{ base: 1, md: 3 }} spacing={6}>
+              <KanbanColumn
+                id="pending"
+                title="Pendientes"
+                icon={FiList}
+                tasks={pendingTasks}
+                columnBg={pendingColumnBg}
+                headerBg={pendingHeaderBg}
+                borderColor={borderColor}
+                colorScheme="gray"
+              />
+              <KanbanColumn
+                id="in_progress"
+                title="En Progreso"
+                icon={FiClock}
+                tasks={inProgressTasks}
+                columnBg={inProgressColumnBg}
+                headerBg={inProgressHeaderBg}
+                borderColor={borderColor}
+                colorScheme="blue"
+              />
+              <KanbanColumn
+                id="completed"
+                title="Completadas"
+                icon={FiCheckCircle}
+                tasks={completedTasks}
+                columnBg={completedColumnBg}
+                headerBg={completedHeaderBg}
+                borderColor={borderColor}
+                colorScheme="green"
+              />
+            </SimpleGrid>
 
-        <DragOverlay>
-          {activeTask ? <KanbanCard task={activeTask} /> : null}
-        </DragOverlay>
-      </DndContext>
+            <DragOverlay>
+              {activeTask && (
+                <Box transform="rotate(3deg)" transition="transform 0.2s" boxShadow="xl">
+                  <KanbanCard task={activeTask} />
+                </Box>
+              )}
+            </DragOverlay>
+          </DndContext>
+        </VStack>
+      </CardBody>
 
       <CreateTaskModal
         isOpen={isOpen}
@@ -167,7 +249,7 @@ const KanbanBoard: React.FC<KanbanBoardProps> = ({ projectId }) => {
         projectId={projectId}
         onTaskCreated={fetchTasks}
       />
-    </Box>
+    </Card>
   );
 };
 

@@ -8,6 +8,7 @@ import PrivateRoute from './components/PrivateRoute';
 import AuthPage from './pages/AuthPage'; 
 import UnauthorizedPage from './pages/UnauthorizedPage';
 import ProfilePage from './components/user/ProfileUser';
+import LandingPage from './pages/Landing';
 import { ChakraProvider, ColorModeScript, extendTheme } from '@chakra-ui/react';
 import { AuthProvider } from './contexts/AuthContext';
 import { ProjectProvider } from './contexts/ProjectContext';
@@ -43,12 +44,13 @@ const App: React.FC = () => {
         <ProjectProvider>
           <Routes>
             {/* Rutas públicas */}
+            <Route path="/" element={<LandingPage />} />
             <Route path="/auth" element={<AuthPage />} />
             <Route path="/unauthorized" element={<UnauthorizedPage />} />
 
             {/* Rutas protegidas */}
             <Route element={<PrivateRoute><MainLayout><Outlet /></MainLayout></PrivateRoute>}>
-              <Route path="/" element={<Navigate to="/projects" replace />} />
+              <Route path="/dashboard" element={<Navigate to="/projects" replace />} />
               <Route path="/projects" element={<ProjectList />} />
               <Route path="/projects/new" element={<CreateProject />} />
               <Route path="/projects/:projectId" element={<ProjectDetail />} />

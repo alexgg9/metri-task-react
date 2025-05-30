@@ -5,38 +5,46 @@ import {
   VStack,
   useColorModeValue,
   Flex,
-  Circle
+  Icon,
+  Badge,
+  HStack
 } from '@chakra-ui/react';
 import { useDroppable } from '@dnd-kit/core';
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { Task } from '../../types/task';
 import SortableTask from './SortableTask';
+import { IconType } from 'react-icons';
 
 interface KanbanColumnProps {
   id: string;
   title: string;
+  icon: IconType;
   tasks: Task[];
   columnBg?: string;
   headerBg?: string;
   borderColor?: string;
+  colorScheme?: string;
 }
 
 const KanbanColumn: React.FC<KanbanColumnProps> = ({
   id,
   title,
+  icon,
   tasks,
   columnBg = 'gray.50',
   headerBg = 'gray.100',
-  borderColor
+  borderColor,
+  colorScheme = 'gray'
 }) => {
   const { setNodeRef } = useDroppable({ id });
   const defaultBorderColor = useColorModeValue('gray.200', 'gray.600');
+  const textColor = useColorModeValue('gray.700', 'white');
 
   const getColumnColor = (status: string) => {
     switch (status) {
       case 'pending':
         return 'orange';
-      case 'in_progress':
+      case 'in progress':
         return 'blue';
       case 'completed':
         return 'green';
@@ -52,6 +60,9 @@ const KanbanColumn: React.FC<KanbanColumnProps> = ({
       borderWidth="1px"
       borderColor={borderColor || defaultBorderColor}
       overflow="hidden"
+      boxShadow="sm"
+      transition="all 0.2s"
+      _hover={{ boxShadow: 'md' }}
     >
       <Box
         bg={headerBg}
@@ -59,20 +70,22 @@ const KanbanColumn: React.FC<KanbanColumnProps> = ({
         borderBottomWidth="1px"
         borderBottomColor={borderColor || defaultBorderColor}
       >
-        <Flex align="center" gap={2}>
-          <Circle size={2} bg={`${getColumnColor(id)}.500`} />
-          <Text fontWeight="medium" fontSize="sm" color="gray.600">
-            {title}
-          </Text>
-          <Circle
-            size={5}
-            bg={useColorModeValue('white', 'gray.700')}
-            color="gray.500"
-            fontSize="xs"
-            fontWeight="bold"
+        <Flex align="center" justify="space-between">
+          <HStack spacing={3}>
+            <Icon as={icon} color={`${colorScheme}.500`} boxSize={5} />
+            <Text fontWeight="medium" fontSize="sm" color={textColor}>
+              {title}
+            </Text>
+          </HStack>
+          <Badge
+            colorScheme={colorScheme}
+            variant="subtle"
+            px={2}
+            py={0.5}
+            borderRadius="full"
           >
             {tasks.length}
-          </Circle>
+          </Badge>
         </Flex>
       </Box>
 
