@@ -5,10 +5,12 @@ import ProjectDetail from './components/projects/ProjectDetails';
 import CreateProject from './components/projects/CreateProject'; 
 import KanbanBoard from './components/kanban/KanbanBoard'; 
 import PrivateRoute from './components/PrivateRoute'; 
-import AuthPage from './pages/AuthPage'; 
+import PublicRoute from './components/PublicRoute';
+import AuthPage from './pages/AuthPage.tsx'; 
 import UnauthorizedPage from './pages/UnauthorizedPage';
 import ProfilePage from './components/user/ProfileUser';
 import LandingPage from './pages/Landing';
+import TaskTimelinePage from './pages/TaskTimelinePage';
 import { ChakraProvider, ColorModeScript, extendTheme } from '@chakra-ui/react';
 import { AuthProvider } from './contexts/AuthContext';
 import { ProjectProvider } from './contexts/ProjectContext';
@@ -44,8 +46,11 @@ const App: React.FC = () => {
         <ProjectProvider>
           <Routes>
             {/* Rutas públicas */}
-            <Route path="/" element={<LandingPage />} />
-            <Route path="/auth" element={<AuthPage />} />
+            <Route element={<PublicRoute><Outlet /></PublicRoute>}>
+              <Route path="/" element={<LandingPage />} />
+              <Route path="/auth" element={<AuthPage />} />
+            </Route>
+
             <Route path="/unauthorized" element={<UnauthorizedPage />} />
 
             {/* Rutas protegidas */}
@@ -56,6 +61,7 @@ const App: React.FC = () => {
               <Route path="/projects/:projectId" element={<ProjectDetail />} />
               <Route path="/projects/:projectId/kanban" element={<KanbanBoardWrapper />} />
               <Route path="/profile" element={<ProfilePage />} />
+              <Route path="/timeline" element={<TaskTimelinePage />} />
             </Route>
           </Routes>
         </ProjectProvider>

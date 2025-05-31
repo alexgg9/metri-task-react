@@ -61,15 +61,22 @@ export const logout = async () => {
     try {
         const token = localStorage.getItem("token");
         if (token) {
-            await axios.post(`${API_URL}/logout`, {}, {
+            await axios.post(`${API_URL}/api/logout`, {}, {
                 headers: {
-                    Authorization: `Bearer ${token}`
+                    'Authorization': `Bearer ${token}`,
+                    'Accept': 'application/json'
                 }
             });
         }
     } catch (error) {
         console.error("Error al cerrar sesión:", error);
     } finally {
+        // Limpiar el token y cualquier otro dato de sesión
         localStorage.removeItem("token");
+        localStorage.removeItem("user");
+        // Limpiar los headers de axios
+        delete axios.defaults.headers.common['Authorization'];
+        // Forzar una recarga de la página para limpiar el estado
+        window.location.href = '/auth';
     }
 };

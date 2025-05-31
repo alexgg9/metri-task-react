@@ -1,4 +1,5 @@
 import { User } from "./user";
+import { Project } from "./project";
 
 
 export interface Task {
@@ -14,4 +15,5 @@ export interface Task {
     project_id: number;
     user_id: number | null;
     assigned_to?: User;
+    project?: Project;
 }

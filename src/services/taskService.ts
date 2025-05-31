@@ -1,5 +1,7 @@
 import axios from "axios";
 import { Task } from "../types/task";
+import { getProjects } from "./projectService";
+import { getCurrentUser } from "./userService";
 
 const API_URL = import.meta.env.VITE_API_URL;
 const token = () => localStorage.getItem("token");
@@ -7,10 +9,53 @@ const token = () => localStorage.getItem("token");
 
 export const getTasks = async (): Promise<Task[]> => {
     try {
+        // Obtenemos el usuario actual
+        const currentUser = await getCurrentUser();
+        console.log('Usuario actual en getTasks:', currentUser);
+        
+        if (!currentUser) {
+            console.log('No hay usuario actual');
+            return [];
+        }
+
+        // Obtenemos todas las tareas
         const response = await axios.get(`${API_URL}/tasks`, {
             headers: { Authorization: `Bearer ${token()}` },
         });
-        return response.data;
+        
+        console.log('Todas las tareas obtenidas:', response.data);
+        
+        // Filtramos las tareas para mostrar solo las del usuario actual
+        const userTasks = response.data.filter((task: Task) => {
+            const isAssignedToUser = task.user_id === currentUser.id;
+            console.log('Verificando tarea:', {
+                taskId: task.id,
+                taskTitle: task.title,
+                taskUserId: task.user_id,
+                currentUserId: currentUser.id,
+                isAssignedToUser
+            });
+            return isAssignedToUser;
+        });
+        
+        console.log('Tareas filtradas para el usuario:', userTasks);
+        
+        // Obtener todos los usuarios
+        const usersResponse = await axios.get(`${API_URL}/users`, {
+            headers: { Authorization: `Bearer ${token()}` },
+        });
+        
+        // Asociar usuarios a las tareas
+        const tasksWithUsers = userTasks.map((task: Task) => {
+            const assignedUser = usersResponse.data.find((user: any) => user.id === task.user_id);
+            return {
+                ...task,
+                assigned_to: assignedUser || null
+            };
+        });
+        
+        console.log('Tareas finales con usuarios:', tasksWithUsers);
+        return tasksWithUsers;
     } catch (error) {
         console.error("Error al obtener las tareas:", error);
         return []; 
@@ -90,7 +135,7 @@ export const updateTask = async (taskId: number, taskData: Partial<Task>): Promi
             throw new Error('No hay token de autenticación');
         }
 
-        // Asegurarnos de que el status es uno de los valores permitidos
+
         const validStatuses = ['pending', 'in progress', 'completed'];
         if (taskData.status && !validStatuses.includes(taskData.status)) {
             console.error('Status inválido:', {
@@ -173,7 +218,6 @@ export const getTasksByProjectId = async (projectId: number): Promise<Task[]> =>
             throw new Error('No hay token de autenticación');
         }
 
-        // Primero obtenemos los usuarios del proyecto
         const usersResponse = await axios.get(`${API_URL}/projects/${projectId}/users`, {
             headers: { 
                 'Authorization': `Bearer ${tokenValue}`,
@@ -184,7 +228,6 @@ export const getTasksByProjectId = async (projectId: number): Promise<Task[]> =>
 
         console.log('Usuarios del proyecto:', usersResponse.data);
 
-        // Luego obtenemos las tareas
         const url = `${API_URL}/tasks?project_id=${projectId}`;
         console.log('Obteniendo tareas con URL:', url);
         
@@ -212,7 +255,6 @@ export const getTasksByProjectId = async (projectId: number): Promise<Task[]> =>
             tasks = response.data.tasks.filter((task: Task) => task.project_id === projectId);
         }
 
-        // Asociamos los usuarios a las tareas
         const tasksWithUsers = tasks.map(task => {
             const assignedUser = usersResponse.data.find((user: any) => user.id === task.user_id);
             return {
@@ -239,5 +281,44 @@ export const getTasksByProjectId = async (projectId: number): Promise<Task[]> =>
             });
         }
         throw error;
+    }
+};
+
+export const getUserTasks = async (): Promise<Task[]> => {
+    try {
+        const tokenValue = token();
+        if (!tokenValue) {
+            console.error('No hay token disponible');
+            return [];
+        }
+
+        console.log('Token usado:', tokenValue.substring(0, 20) + '...');
+        
+        const response = await axios.get(`${API_URL}/user-tasks`, {
+            headers: { 
+                'Authorization': `Bearer ${tokenValue}`,
+                'Accept': 'application/json'
+            },
+        });
+
+        console.log('Tareas recibidas:', response.data);
+
+        // Asegurarnos de que las tareas tengan la información del proyecto
+        const tasks = response.data.map((task: Task) => ({
+            ...task,
+            project: task.project || null,
+            assigned_to: task.assigned_to || null
+        }));
+
+        return tasks;
+    } catch (error) {
+        if (axios.isAxiosError(error)) {
+            console.error('Error al obtener tareas:', {
+                status: error.response?.status,
+                data: error.response?.data,
+                message: error.message
+            });
+        }
+        return [];
     }
 };

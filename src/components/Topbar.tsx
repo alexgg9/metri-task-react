@@ -31,7 +31,7 @@ const Topbar: React.FC<TopbarProps> = ({ collapsed, toggleCollapsed }) => {
   const location = useLocation();
   const navigate = useNavigate();
   const { colorMode, toggleColorMode } = useColorMode();
-  const { user } = useAuth();
+  const { user, setUser } = useAuth();
   const { currentProject, loading } = useProject();
   
   const bgColor = useColorModeValue('white', 'gray.800');
@@ -45,8 +45,6 @@ const Topbar: React.FC<TopbarProps> = ({ collapsed, toggleCollapsed }) => {
   const handleLogout = async () => {
     try {
       await logout();
-      localStorage.removeItem('token');
-      navigate('/auth', { replace: true });
     } catch (error) {
       console.error('Error al cerrar sesión:', error);
     }
@@ -185,35 +183,47 @@ const Topbar: React.FC<TopbarProps> = ({ collapsed, toggleCollapsed }) => {
               shadow="lg" 
               borderRadius="md" 
               py={2}
-              bg={bgColor}
+              bg={useColorModeValue('white', 'gray.800')}
               borderColor={borderColor}
+              minW="200px"
             >
               <MenuItem 
                 icon={<FiUser />} 
                 as={Link} 
                 to="/profile"
+                bg={useColorModeValue('white', 'gray.800')}
                 _hover={{ bg: useColorModeValue('gray.100', 'gray.700') }}
+                _focus={{ bg: useColorModeValue('gray.100', 'gray.700') }}
                 borderRadius="md"
                 mx={2}
                 px={3}
+                color={useColorModeValue('gray.700', 'white')}
               >
                 Perfil
               </MenuItem>
               <MenuItem 
                 icon={<FiSettings />}
+                bg={useColorModeValue('white', 'gray.800')}
                 _hover={{ bg: useColorModeValue('gray.100', 'gray.700') }}
+                _focus={{ bg: useColorModeValue('gray.100', 'gray.700') }}
                 borderRadius="md"
                 mx={2}
                 px={3}
+                color={useColorModeValue('gray.700', 'white')}
               >
                 Configuración
               </MenuItem>
-              <MenuDivider my={2} />
+              <MenuDivider 
+                my={2} 
+                borderColor={useColorModeValue('gray.200', 'gray.600')}
+              />
               <MenuItem 
                 icon={<FiLogOut />} 
-                color="red.500"
+                bg={useColorModeValue('white', 'gray.800')}
+                color={useColorModeValue('red.500', 'red.400')}
                 onClick={handleLogout}
-                _hover={{ bg: useColorModeValue('red.50', 'red.900'), color: useColorModeValue('red.600', 'red.300') }}
+                _hover={{ bg: useColorModeValue('red.50', 'red.900') }}
+                _focus={{ bg: useColorModeValue('red.50', 'red.900') }}
                 borderRadius="md"
                 mx={2}
                 px={3}

@@ -19,7 +19,8 @@ import {
   FiUsers,
   FiSettings,
   FiBell,
-  FiCheckSquare
+  FiCheckSquare,
+  FiClock
 } from 'react-icons/fi';
 
 interface SidebarProps {
@@ -44,6 +45,11 @@ const Sidebar: React.FC<SidebarProps> = ({ collapsed }) => {
       path: '/tasks',
       icon: FiCheckSquare,
       label: 'Tareas'
+    },
+    {
+      path: '/timeline',
+      icon: FiClock,
+      label: 'Línea de Tiempo'
     },
     {
       path: '/calendar',

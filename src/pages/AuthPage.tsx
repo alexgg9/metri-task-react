@@ -66,25 +66,28 @@ export default function AuthForms() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-800 via-indigo-900 to-blue-900 px-4">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 px-4">
       <div className="w-full max-w-md">
         {/* Logo y Título */}
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gradient-to-r from-blue-500 to-indigo-600 mb-4 shadow-lg shadow-blue-500/20">
-            <FiCheckCircle className="w-8 h-8 text-white" />
+          <div className="inline-flex items-center justify-center w-24 h-24 mb-4">
+            <img src="/logo.svg" alt="MetriTask Logo" className="w-20 h-20 object-contain" />
           </div>
-          <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-400 to-indigo-300 text-transparent bg-clip-text">
-            {isLogin ? "Bienvenido de nuevo" : "Crear cuenta"}
+          <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-400 to-blue-300 text-transparent bg-clip-text">
+            MetriTask
           </h1>
-          <p className="text-gray-300 mt-2">
+          <h2 className="text-2xl font-semibold text-gray-200 mt-2">
+            {isLogin ? "Bienvenido de nuevo" : "Crear cuenta"}
+          </h2>
+          <p className="text-gray-400 mt-2">
             {isLogin ? "Inicia sesión para continuar" : "Regístrate para empezar"}
           </p>
         </div>
 
         {/* Formulario */}
-        <div className="bg-slate-800/50 backdrop-blur-lg rounded-2xl shadow-xl border border-white/10 p-8">
+        <div className="bg-gray-800/80 backdrop-blur-lg rounded-2xl shadow-xl border border-gray-700/50 p-8 hover:border-gray-600/50 transition-all duration-300">
           {error && (
-            <div className="mb-6 p-4 bg-red-900/50 border border-red-500/30 rounded-xl text-red-200 text-sm flex items-center">
+            <div className="mb-6 p-4 bg-red-900/30 border border-red-500/30 rounded-xl text-red-200 text-sm flex items-center">
               <FiAlertTriangle className="w-5 h-5 mr-2" />
               {error}
             </div>
@@ -111,7 +114,7 @@ export default function AuthForms() {
                     id="role"
                     value={role}
                     onChange={(e) => setRole(e.target.value)}
-                    className="w-full px-4 py-2.5 rounded-xl border border-gray-600 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all bg-slate-700/50 backdrop-blur-sm text-gray-200"
+                    className="w-full px-4 py-2.5 rounded-xl border border-gray-600 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all bg-gray-700/50 backdrop-blur-sm text-gray-200"
                     required
                   >
                     <option value="member">Miembro</option>
@@ -165,7 +168,7 @@ export default function AuthForms() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all duration-300 hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full py-3 bg-gradient-to-r from-blue-500 to-blue-400 text-white rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all duration-300 hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {loading ? (
                 <div className="flex items-center justify-center">
@@ -176,7 +179,7 @@ export default function AuthForms() {
             </button>
           </form>
 
-          <div className="mt-6 text-center text-sm text-gray-300">
+          <div className="mt-6 text-center text-sm text-gray-400">
             {isLogin ? (
               <>
                 ¿No tienes cuenta?{" "}
@@ -204,6 +207,16 @@ export default function AuthForms() {
                 Volver al inicio de sesión
               </button>
             )}
+          </div>
+
+          <div className="mt-8 pt-6 border-t border-gray-700/50">
+            <button
+              onClick={() => navigate('/')}
+              className="w-full inline-flex items-center justify-center text-sm text-gray-400 hover:text-gray-200 transition-colors"
+            >
+              <FiChevronLeft className="w-4 h-4 mr-2" />
+              Volver a la landing
+            </button>
           </div>
         </div>
       </div>
@@ -246,7 +259,7 @@ function InputWithIcon({
           onChange={onChange}
           placeholder={placeholder}
           required
-          className="w-full pl-10 pr-10 py-2.5 rounded-xl border border-gray-600 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all bg-slate-700/50 backdrop-blur-sm text-gray-200 placeholder-gray-400"
+          className="w-full pl-10 pr-10 py-2.5 rounded-xl border border-gray-600 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all bg-gray-700/50 backdrop-blur-sm text-gray-200 placeholder-gray-400"
         />
         {suffix && (
           <div className="absolute inset-y-0 right-0 pr-3 flex items-center">
