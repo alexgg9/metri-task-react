@@ -52,6 +52,8 @@ const ProjectCard: React.FC<ProjectCardProps> = ({ project }) => {
     } else if (project.progress < 100 && 
               ['completado', 'completed'].includes(project.status.toLowerCase())) {
       setDisplayStatus('En progreso');
+    } else {
+      setDisplayStatus(translateStatus(project.status));
     }
   }, [project.progress, project.status]);
 
@@ -65,6 +67,8 @@ const ProjectCard: React.FC<ProjectCardProps> = ({ project }) => {
         return 'Pendiente';
       case 'cancelled':
         return 'Cancelado';
+      case 'active':
+        return 'Activo';
       default:
         return status;
     }
@@ -97,6 +101,9 @@ const ProjectCard: React.FC<ProjectCardProps> = ({ project }) => {
       case 'cancelado':
       case 'cancelled':
         return 'red';
+      case 'activo':
+      case 'active':
+        return 'green';
       default:
         return 'gray';
     }
@@ -168,8 +175,7 @@ const ProjectCard: React.FC<ProjectCardProps> = ({ project }) => {
                 <Heading 
                   size="md" 
                   color={useColorModeValue('gray.700', 'white')}
-                  isTruncated
-                  maxW="70%"
+                  maxW="100%"
                 >
                   {project.name}
                 </Heading>
@@ -278,7 +284,7 @@ const ProjectCard: React.FC<ProjectCardProps> = ({ project }) => {
                 color: 'blue.600'
               }}
             >
-              Ver detalles
+              Ir al proyecto
             </Button>
           </VStack>
         </CardBody>

@@ -2,7 +2,12 @@ import React from 'react';
 import { Routes, Route, Navigate, useParams, Outlet } from 'react-router-dom';
 import ProjectList from './components/projects/ProjectList';
 import ProjectDetail from './components/projects/ProjectDetails';
-import CreateProject from './components/projects/CreateProject'; 
+import CreateProject from './components/projects/CreateProject';
+import Login from './components/auth/Login';
+import Register from './components/auth/Register';
+import Dashboard from './components/dashboard/Dashboard';
+import Profile from './components/profile/Profile';
+import NotFound from './components/common/NotFound';
 import KanbanBoard from './components/kanban/KanbanBoard'; 
 import PrivateRoute from './components/PrivateRoute'; 
 import PublicRoute from './components/PublicRoute';
@@ -36,6 +41,10 @@ const theme = extendTheme({
     heading: 'Poppins, sans-serif',
     body: 'Inter, sans-serif',
   },
+  config: {
+    initialColorMode: 'dark',
+    useSystemColorMode: false,
+  },
 });
 
 const App: React.FC = () => {
@@ -57,7 +66,7 @@ const App: React.FC = () => {
             <Route element={<PrivateRoute><MainLayout><Outlet /></MainLayout></PrivateRoute>}>
               <Route path="/dashboard" element={<Navigate to="/projects" replace />} />
               <Route path="/projects" element={<ProjectList />} />
-              <Route path="/projects/new" element={<CreateProject />} />
+              <Route path="/projects/create" element={<CreateProject />} />
               <Route path="/projects/:projectId" element={<ProjectDetail />} />
               <Route path="/projects/:projectId/kanban" element={<KanbanBoardWrapper />} />
               <Route path="/profile" element={<ProfilePage />} />

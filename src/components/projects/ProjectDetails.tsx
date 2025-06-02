@@ -1,5 +1,7 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { User } from '../../types/user';
+import { Project } from '../../types/project';
 import {
   Box,
   Container,
@@ -7,14 +9,6 @@ import {
   Text,
   Button,
   Spinner,
-  Modal,
-  ModalOverlay,
-  ModalContent,
-  ModalHeader,
-  ModalFooter,
-  ModalBody,
-  ModalCloseButton,
-  useDisclosure,
   Grid,
   GridItem,
   Card,
@@ -31,15 +25,28 @@ import {
   useToast,
   useColorModeValue,
   Icon,
-  Circle,
   CircularProgress,
   CircularProgressLabel,
   Badge,
-  Divider
+  Divider,
+  SimpleGrid,
+  Avatar,
+  useDisclosure,
+  Menu,
+  MenuButton,
+  MenuList,
+  MenuItem,
+  IconButton,
+  Center,
+  Modal,
+  ModalOverlay,
+  ModalContent,
+  ModalHeader,
+  ModalFooter,
+  ModalBody,
+  ModalCloseButton
 } from '@chakra-ui/react';
 import { 
-  FiEdit, 
-  FiTrash2, 
   FiCalendar, 
   FiCheckCircle,
   FiClock,
@@ -47,68 +54,39 @@ import {
   FiUser, 
   FiUsers,
   FiBarChart2,
-  FiList,
   FiGrid,
-  FiUsers as FiTeam
+  FiMoreVertical,
+  FiEdit2,
+  FiTrash2,
+  FiUserPlus
 } from 'react-icons/fi';
-import { deleteProject } from '../../services/projectService';
+import { getProjectById, deleteProject } from '../../services/projectService';
 import KanbanBoard from '../kanban/KanbanBoard';
 import { useProject } from '../../contexts/ProjectContext';
+import { useAuth } from '../../contexts/AuthContext';
 import ProjectUsersModal from './ProjectUsersModal';
+import EditProjectModal from './EditProjectModal';
 
-const ProjectDetail: React.FC = () => {
-  // 1. Hooks de React Router
+const ProjectDetails: React.FC = () => {
   const { projectId } = useParams<{ projectId: string }>();
+  const { currentProject, loading, refreshProject } = useProject();
+  const { user } = useAuth();
   const navigate = useNavigate();
-
-  // 2. Hooks de Chakra UI
-  const { isOpen, onOpen, onClose } = useDisclosure();
-  const { 
-    isOpen: isUsersModalOpen, 
-    onOpen: onUsersModalOpen, 
-    onClose: onUsersModalClose 
-  } = useDisclosure();
   const toast = useToast();
   const cardBg = useColorModeValue('white', 'gray.700');
-  const borderColor = useColorModeValue('gray.200', 'gray.600');
-  const textColor = useColorModeValue('gray.600', 'gray.300');
+  const textColor = useColorModeValue('gray.800', 'white');
   const progressBg = useColorModeValue('gray.100', 'gray.600');
+  const borderColor = useColorModeValue('gray.200', 'gray.600');
+  const hoverBg = useColorModeValue('gray.50', 'gray.600');
+  const { isOpen: isUsersModalOpen, onOpen: onUsersModalOpen, onClose: onUsersModalClose } = useDisclosure();
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [isAddTaskModalOpen, setIsAddTaskModalOpen] = useState(false);
+  const [isAddUserModalOpen, setIsAddUserModalOpen] = useState(false);
+  const { isOpen: isDeleteModalOpen, onOpen: onDeleteModalOpen, onClose: onDeleteModalClose } = useDisclosure();
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-
-  const { currentProject: project, loading, refreshProject } = useProject();
-
-
-  const handleEditProject = () => {
-    if (project) {
-      navigate(`/projects/${project.id}/edit`);
-    }
-  };
-
-  const handleDeleteProject = async () => {
-    if (!project) return;
-    
-    try {
-      await deleteProject(project.id);
-      toast({
-        title: 'Éxito',
-        description: 'Proyecto eliminado correctamente',
-        status: 'success',
-        duration: 5000,
-        isClosable: true,
-      });
-      navigate('/projects');
-    } catch (error) {
-      console.error('Error al eliminar el proyecto:', error);
-      toast({
-        title: 'Error',
-        description: 'No se pudo eliminar el proyecto',
-        status: 'error',
-        duration: 5000,
-        isClosable: true,
-      });
-    }
-    onClose();
-  };
+  const isProjectCreator = user && currentProject && (currentProject.creator?.id === user.id || currentProject.user_id === user.id);
+  const isAdmin = user?.role === 'admin';
 
   const getStatusColor = (status: string | undefined | null) => {
     if (!status) return 'gray';
@@ -155,64 +133,107 @@ const ProjectDetail: React.FC = () => {
     });
   };
 
+  const handleDeleteProject = async () => {
+    if (!projectId) return;
+
+    try {
+      await deleteProject(Number(projectId));
+      toast({
+        title: 'Proyecto eliminado',
+        description: 'El proyecto ha sido eliminado correctamente',
+        status: 'success',
+        duration: 3000,
+        isClosable: true,
+      });
+      navigate('/projects');
+    } catch (error) {
+      console.error('Error al eliminar el proyecto:', error);
+      toast({
+        title: 'Error',
+        description: error instanceof Error ? error.message : 'No se pudo eliminar el proyecto',
+        status: 'error',
+        duration: 5000,
+        isClosable: true,
+      });
+    }
+  };
+
+  const handleProjectUpdated = async (updatedProject: Project) => {
+    try {
+      await refreshProject();
+      toast({
+        title: "Proyecto actualizado",
+        description: "Los cambios se han guardado correctamente",
+        status: "success",
+        duration: 3000,
+        isClosable: true,
+      });
+    } catch (error) {
+      console.error('Error al actualizar el proyecto:', error);
+      toast({
+        title: "Error",
+        description: "No se pudo actualizar el proyecto",
+        status: "error",
+        duration: 5000,
+        isClosable: true,
+      });
+    }
+  };
+
+  useEffect(() => {
+    if (projectId) {
+      refreshProject();
+    }
+  }, [projectId, refreshProject]);
 
   if (loading) {
     return (
       <Container maxW="container.xl" py={10}>
-        <Flex justify="center" align="center" h="50vh">
-          <Spinner size="xl" thickness="4px" color="blue.500" />
-        </Flex>
+        <Center>
+          <Spinner size="xl" color="blue.500" />
+        </Center>
       </Container>
     );
   }
 
-  if (!project) {
+  if (!currentProject) {
     return (
       <Container maxW="container.xl" py={10}>
-        <Text>No se encontró el proyecto</Text>
+        <Center>
+          <Text>No se encontró el proyecto</Text>
+        </Center>
       </Container>
     );
   }
 
-
   return (
-    <Container maxW="container.xl" py={8}>
-      <Card bg={cardBg} boxShadow="sm" borderRadius="xl" borderWidth="1px" borderColor={borderColor}>
+    <Container maxW="container.xl" py={10}>
+      <Card bg={cardBg} borderRadius="xl" boxShadow="xl">
         <CardBody>
           <Flex justify="space-between" align="center" mb={8}>
-            <Heading as="h1" size="xl" color={textColor}>{project.name}</Heading>
-            <HStack spacing={3}>
-              <Button 
-                leftIcon={<FiUsers />} 
-                colorScheme="purple" 
-                variant="outline"
-                onClick={onUsersModalOpen}
-                _hover={{ transform: 'translateY(-1px)', boxShadow: 'md' }}
-                transition="all 0.2s"
-              >
-                Gestionar Usuarios
-              </Button>
-              <Button 
-                leftIcon={<FiEdit />} 
-                colorScheme="blue" 
-                variant="outline"
-                onClick={handleEditProject}
-                _hover={{ transform: 'translateY(-1px)', boxShadow: 'md' }}
-                transition="all 0.2s"
-              >
-                Editar
-              </Button>
-              <Button 
-                leftIcon={<FiTrash2 />} 
-                colorScheme="red" 
-                variant="outline"
-                onClick={onOpen}
-                _hover={{ transform: 'translateY(-1px)', boxShadow: 'md' }}
-                transition="all 0.2s"
-              >
-                Eliminar
-              </Button>
-            </HStack>
+            <Heading as="h1" size="xl" color={textColor}>{currentProject.name}</Heading>
+            {(isProjectCreator || isAdmin) && (
+              <HStack spacing={2}>
+                <Menu>
+                  <MenuButton
+                    as={Button}
+                    rightIcon={<FiMoreVertical />}
+                    variant="ghost"
+                    size="sm"
+                  >
+                    Acciones
+                  </MenuButton>
+                  <MenuList>
+                    <MenuItem icon={<FiEdit2 />} onClick={() => setIsEditModalOpen(true)}>
+                      Editar Proyecto
+                    </MenuItem>
+                    <MenuItem icon={<FiTrash2 />} onClick={() => onDeleteModalOpen()} color="red.500">
+                      Eliminar Proyecto
+                    </MenuItem>
+                  </MenuList>
+                </Menu>
+              </HStack>
+            )}
           </Flex>
 
           <Tabs variant="enclosed" colorScheme="blue" isLazy>
@@ -231,26 +252,8 @@ const ProjectDetail: React.FC = () => {
                 fontWeight="medium"
               >
                 <HStack spacing={2}>
-                  <Icon as={FiList} />
-                  <Text>Tareas</Text>
-                </HStack>
-              </Tab>
-              <Tab 
-                _selected={{ color: 'blue.500', borderColor: 'blue.500' }}
-                fontWeight="medium"
-              >
-                <HStack spacing={2}>
                   <Icon as={FiGrid} />
                   <Text>Kanban</Text>
-                </HStack>
-              </Tab>
-              <Tab 
-                _selected={{ color: 'blue.500', borderColor: 'blue.500' }}
-                fontWeight="medium"
-              >
-                <HStack spacing={2}>
-                  <Icon as={FiTeam} />
-                  <Text>Equipo</Text>
                 </HStack>
               </Tab>
             </TabList>
@@ -259,118 +262,274 @@ const ProjectDetail: React.FC = () => {
               <TabPanel>
                 <Grid templateColumns={{ base: "1fr", lg: "2fr 1fr" }} gap={8}>
                   <GridItem>
-                    <VStack align="stretch" spacing={6}>
+                    <VStack align="stretch" spacing={8}>
                       <Box>
-                        <Text fontSize="sm" color="gray.500" mb={2}>Descripción</Text>
-                        <Text color={textColor}>{project.description}</Text>
+                        <Heading size="lg" color={textColor} mb={6}>{currentProject.name}</Heading>
+                        <Text color={textColor} fontSize="md" mb={6}>{currentProject.description}</Text>
+                        
+                        <Box position="relative" mb={2}>
+                          <Box
+                            h="6px"
+                            w="full"
+                            bg={progressBg}
+                            borderRadius="full"
+                            overflow="hidden"
+                          >
+                            <Box
+                              h="full"
+                              w={`${currentProject.progress || 0}%`}
+                              bg={currentProject.progress === 100 ? "green.500" : "blue.500"}
+                              transition="width 0.3s ease"
+                              borderRadius="full"
+                            />
+                          </Box>
+                          <Flex justify="space-between" mt={2}>
+                            <Text fontSize="sm" color="gray.500">Progreso</Text>
+                            <Text fontSize="sm" fontWeight="medium" color={textColor}>
+                              {currentProject.progress || 0}%
+                            </Text>
+                          </Flex>
+                        </Box>
                       </Box>
 
-                      <Box>
-                        <Text fontSize="sm" color="gray.500" mb={4}>Progreso</Text>
-                        <Flex align="center" gap={4}>
-                          <CircularProgress
-                            value={project.progress || 0}
-                            color={project.progress === 100 ? "green.500" : "blue.500"}
-                            size="120px"
-                            thickness="8px"
-                            trackColor={progressBg}
-                          >
-                            <CircularProgressLabel>
-                              <VStack spacing={0}>
-                                <Text fontSize="2xl" fontWeight="bold" color={textColor}>
-                                  {project.progress || 0}%
-                                </Text>
-                                <Text fontSize="xs" color="gray.500">Completado</Text>
-                              </VStack>
-                            </CircularProgressLabel>
-                          </CircularProgress>
+                      <SimpleGrid columns={{ base: 2, md: 3 }} spacing={6}>
+                        <Box
+                          p={4}
+                          bg={useColorModeValue('white', 'gray.700')}
+                          borderRadius="lg"
+                          borderWidth="1px"
+                          borderColor={borderColor}
+                          _hover={{ transform: 'translateY(-2px)', shadow: 'md' }}
+                          transition="all 0.2s"
+                        >
                           <VStack align="start" spacing={2}>
                             <HStack>
-                              <Circle size="3" bg="blue.500" />
-                              <Text fontSize="sm">En progreso</Text>
+                              <Icon as={FiCheckCircle} color="blue.500" />
+                              <Text fontSize="sm" color="gray.500">Completadas</Text>
                             </HStack>
-                            <HStack>
-                              <Circle size="3" bg="green.500" />
-                              <Text fontSize="sm">Completado</Text>
-                            </HStack>
-                            <HStack>
-                              <Circle size="3" bg="gray.300" />
-                              <Text fontSize="sm">Pendiente</Text>
-                            </HStack>
+                            <Text fontSize="2xl" fontWeight="bold" color={textColor}>
+                              {currentProject.tasks?.filter(task => task.status === 'completed').length || 0}
+                            </Text>
                           </VStack>
+                        </Box>
+
+                        <Box
+                          p={4}
+                          bg={useColorModeValue('white', 'gray.700')}
+                          borderRadius="lg"
+                          borderWidth="1px"
+                          borderColor={borderColor}
+                          _hover={{ transform: 'translateY(-2px)', shadow: 'md' }}
+                          transition="all 0.2s"
+                        >
+                          <VStack align="start" spacing={2}>
+                            <HStack>
+                              <Icon as={FiClock} color="orange.500" />
+                              <Text fontSize="sm" color="gray.500">En Progreso</Text>
+                            </HStack>
+                            <Text fontSize="2xl" fontWeight="bold" color={textColor}>
+                              {currentProject.tasks?.filter(task => task.status === 'in progress').length || 0}
+                            </Text>
+                          </VStack>
+                        </Box>
+
+                        <Box
+                          p={4}
+                          bg={useColorModeValue('white', 'gray.700')}
+                          borderRadius="lg"
+                          borderWidth="1px"
+                          borderColor={borderColor}
+                          _hover={{ transform: 'translateY(-2px)', shadow: 'md' }}
+                          transition="all 0.2s"
+                        >
+                          <VStack align="start" spacing={2}>
+                            <HStack>
+                              <Icon as={FiFlag} color={`${getPriorityColor(currentProject.priority)}.500`} />
+                              <Text fontSize="sm" color="gray.500">Prioridad</Text>
+                            </HStack>
+                            <Text fontSize="2xl" fontWeight="bold" color={textColor}>
+                              {currentProject.priority === 'high' ? 'Alta' :
+                               currentProject.priority === 'medium' ? 'Media' : 'Baja'}
+                            </Text>
+                          </VStack>
+                        </Box>
+                      </SimpleGrid>
+
+                      <Box>
+                        <Flex justify="space-between" align="center" mb={4}>
+                          <Text fontSize="lg" fontWeight="medium" color={textColor}>Equipo del Proyecto</Text>
+                          {(isProjectCreator || isAdmin) && (
+                            <Button
+                              leftIcon={<Icon as={FiUserPlus} />}
+                              size="sm"
+                              colorScheme="blue"
+                              variant="outline"
+                              onClick={onUsersModalOpen}
+                            >
+                              Añadir Miembros
+                            </Button>
+                          )}
                         </Flex>
+                        <VStack spacing={6}>
+                          {/* Manager del Proyecto */}
+                          <Box
+                            p={6}
+                            bg={useColorModeValue('white', 'gray.700')}
+                            borderRadius="xl"
+                            borderWidth="1px"
+                            borderColor={borderColor}
+                            w="full"
+                            _hover={{ transform: 'translateY(-2px)', shadow: 'lg' }}
+                            transition="all 0.2s"
+                          >
+                            <VStack align="stretch" spacing={4}>
+                              <Text fontSize="sm" fontWeight="medium" color="gray.500">
+                                Manager del Proyecto
+                              </Text>
+                              <Flex align="center" gap={4}>
+                                <Avatar
+                                  size="lg"
+                                  name={currentProject.creator?.name || 'Usuario'}
+                                  src={currentProject.creator?.avatar}
+                                  bg="blue.500"
+                                />
+                                <VStack align="start" spacing={1}>
+                                  <Text fontSize="lg" color={textColor} fontWeight="medium">
+                                    {currentProject.creator?.name || 'Usuario'}
+                                  </Text>
+                                  <Text fontSize="sm" color="gray.500">
+                                    {currentProject.creator?.email || 'No disponible'}
+                                  </Text>
+                                </VStack>
+                                <Badge
+                                  ml="auto"
+                                  colorScheme="blue"
+                                  variant="subtle"
+                                  px={3}
+                                  py={1}
+                                  borderRadius="full"
+                                >
+                                  Manager
+                                </Badge>
+                              </Flex>
+                            </VStack>
+                          </Box>
+
+                          {/* Miembros del Equipo */}
+                          <Box
+                            p={6}
+                            bg={useColorModeValue('white', 'gray.700')}
+                            borderRadius="xl"
+                            borderWidth="1px"
+                            borderColor={borderColor}
+                            w="full"
+                          >
+                            <VStack align="stretch" spacing={4}>
+                              <Flex justify="space-between" align="center">
+                                <Text fontSize="sm" fontWeight="medium" color="gray.500">
+                                  Miembros del Equipo
+                                </Text>
+                                <Badge
+                                  colorScheme="purple"
+                                  variant="subtle"
+                                  px={3}
+                                  py={1}
+                                  borderRadius="full"
+                                >
+                                  {currentProject.users?.length || 0} miembros
+                                </Badge>
+                              </Flex>
+                              <Divider />
+                              {currentProject.users && currentProject.users.length > 0 ? (
+                                <SimpleGrid columns={{ base: 2, md: 3, lg: 4 }} spacing={6}>
+                                  {currentProject.users.map((member: User, index: number) => (
+                                    <Box
+                                      key={index}
+                                      p={4}
+                                      bg={useColorModeValue('gray.50', 'gray.600')}
+                                      borderRadius="lg"
+                                      _hover={{ transform: 'translateY(-2px)', shadow: 'md' }}
+                                      transition="all 0.2s"
+                                    >
+                                      <VStack spacing={3}>
+                                        <Avatar
+                                          size="md"
+                                          name={member.name}
+                                          src={member.avatar}
+                                          bg="purple.500"
+                                        />
+                                        <VStack spacing={1} align="center">
+                                          <Text fontSize="sm" color={textColor} fontWeight="medium" noOfLines={1}>
+                                            {member.name}
+                                          </Text>
+                                          <Text fontSize="xs" color="gray.500" noOfLines={1}>
+                                            {member.email}
+                                          </Text>
+                                        </VStack>
+                                      </VStack>
+                                    </Box>
+                                  ))}
+                                </SimpleGrid>
+                              ) : (
+                                <Center py={8}>
+                                  <VStack spacing={3}>
+                                    <Icon as={FiUsers} boxSize={8} color="gray.400" />
+                                    <Text color="gray.500" textAlign="center">
+                                      No hay miembros asignados al proyecto
+                                    </Text>
+                                    {(isProjectCreator || isAdmin) && (
+                                      <Button
+                                        size="sm"
+                                        colorScheme="blue"
+                                        variant="ghost"
+                                        onClick={onUsersModalOpen}
+                                      >
+                                        Añadir miembros
+                                      </Button>
+                                    )}
+                                  </VStack>
+                                </Center>
+                              )}
+                            </VStack>
+                          </Box>
+                        </VStack>
                       </Box>
                     </VStack>
                   </GridItem>
                   
                   <GridItem>
-                    <Card variant="outline" borderColor={borderColor}>
-                      <CardHeader pb={2}>
-                        <Heading size="md" color={textColor}>Información del Proyecto</Heading>
-                      </CardHeader>
-                      <CardBody>
+                    <VStack spacing={6} align="stretch">
+                      <Box
+                        p={6}
+                        bg={useColorModeValue('white', 'gray.700')}
+                        borderRadius="lg"
+                        borderWidth="1px"
+                        borderColor={borderColor}
+                      >
                         <VStack align="stretch" spacing={4}>
-                          <HStack justify="space-between">
-                            <HStack>
-                              <Icon as={FiCheckCircle} color={`${getStatusColor(project.status)}.500`} />
-                              <Text fontSize="sm">Estado</Text>
-                            </HStack>
-                            <Badge
-                              colorScheme={getStatusColor(project.status)}
-                              variant="subtle"
-                              px={2}
-                              py={0.5}
-                              borderRadius="full"
-                            >
-                              {project.status === 'completed' ? 'Completado' : 
-                               project.status === 'in progress' ? 'En progreso' : 'Activo'}
-                            </Badge>
-                          </HStack>
-
+                          <Heading size="md" color={textColor}>Detalles</Heading>
                           <Divider />
-
-                          <HStack justify="space-between">
-                            <HStack>
-                              <Icon as={FiFlag} color={`${getPriorityColor(project.priority)}.500`} />
-                              <Text fontSize="sm">Prioridad</Text>
-                            </HStack>
-                            <Badge
-                              colorScheme={getPriorityColor(project.priority)}
-                              variant="subtle"
-                              px={2}
-                              py={0.5}
-                              borderRadius="full"
-                            >
-                              {project.priority === 'high' ? 'Alta' :
-                               project.priority === 'medium' ? 'Media' : 'Baja'}
-                            </Badge>
-                          </HStack>
-
-                          <Divider />
-
+                          
                           <HStack justify="space-between">
                             <HStack>
                               <Icon as={FiCalendar} color="blue.500" />
-                              <Text fontSize="sm">Inicio</Text>
+                              <Text fontSize="sm">Fecha de inicio</Text>
                             </HStack>
                             <Text fontSize="sm" color={textColor}>
-                              {formatDate(project.start_date)}
+                              {formatDate(currentProject.start_date)}
                             </Text>
                           </HStack>
 
-                          {project.end_date && (
-                            <>
-                              <Divider />
-                              <HStack justify="space-between">
-                                <HStack>
-                                  <Icon as={FiClock} color="blue.500" />
-                                  <Text fontSize="sm">Fin</Text>
-                                </HStack>
-                                <Text fontSize="sm" color={textColor}>
-                                  {formatDate(project.end_date)}
-                                </Text>
+                          {currentProject.end_date && (
+                            <HStack justify="space-between">
+                              <HStack>
+                                <Icon as={FiClock} color="blue.500" />
+                                <Text fontSize="sm">Fecha de fin</Text>
                               </HStack>
-                            </>
+                              <Text fontSize="sm" color={textColor}>
+                                {formatDate(currentProject.end_date)}
+                              </Text>
+                            </HStack>
                           )}
 
                           <Divider />
@@ -381,16 +540,14 @@ const ProjectDetail: React.FC = () => {
                               <Text fontSize="sm">Creador</Text>
                             </HStack>
                             <Text fontSize="sm" color={textColor}>
-                              {project.creator?.name || 'Usuario'}
+                              {currentProject.creator?.name || 'Usuario'}
                             </Text>
                           </HStack>
-
-                          <Divider />
 
                           <HStack justify="space-between">
                             <HStack>
                               <Icon as={FiUsers} color="blue.500" />
-                              <Text fontSize="sm">Tareas</Text>
+                              <Text fontSize="sm">Total tareas</Text>
                             </HStack>
                             <Badge
                               colorScheme="blue"
@@ -399,79 +556,157 @@ const ProjectDetail: React.FC = () => {
                               py={0.5}
                               borderRadius="full"
                             >
-                              {project.tasks?.length || 0}
+                              {currentProject.tasks?.length || 0}
                             </Badge>
                           </HStack>
                         </VStack>
-                      </CardBody>
-                    </Card>
+                      </Box>
+
+                      {/* Nueva sección de estadísticas */}
+                      <Box
+                        p={6}
+                        bg={useColorModeValue('white', 'gray.700')}
+                        borderRadius="lg"
+                        borderWidth="1px"
+                        borderColor={borderColor}
+                      >
+                        <VStack align="stretch" spacing={4}>
+                          <Heading size="md" color={textColor}>Estadísticas</Heading>
+                          <Divider />
+                          
+                          <SimpleGrid columns={2} spacing={4}>
+                            <Box>
+                              <Text fontSize="sm" color="gray.500" mb={1}>Tareas Completadas</Text>
+                              <HStack>
+                                <CircularProgress
+                                  value={(currentProject.tasks?.filter(task => task.status === 'completed').length || 0) / (currentProject.tasks?.length || 1) * 100}
+                                  color="green.500"
+                                  size="60px"
+                                >
+                                  <CircularProgressLabel>
+                                    {Math.round((currentProject.tasks?.filter(task => task.status === 'completed').length || 0) / (currentProject.tasks?.length || 1) * 100)}%
+                                  </CircularProgressLabel>
+                                </CircularProgress>
+                                <Text fontSize="sm" color={textColor}>
+                                  {currentProject.tasks?.filter(task => task.status === 'completed').length || 0} de {currentProject.tasks?.length || 0}
+                                </Text>
+                              </HStack>
+                            </Box>
+
+                            <Box>
+                              <Text fontSize="sm" color="gray.500" mb={1}>Tareas en Progreso</Text>
+                              <HStack>
+                                <CircularProgress
+                                  value={(currentProject.tasks?.filter(task => task.status === 'in progress').length || 0) / (currentProject.tasks?.length || 1) * 100}
+                                  color="blue.500"
+                                  size="60px"
+                                >
+                                  <CircularProgressLabel>
+                                    {Math.round((currentProject.tasks?.filter(task => task.status === 'in progress').length || 0) / (currentProject.tasks?.length || 1) * 100)}%
+                                  </CircularProgressLabel>
+                                </CircularProgress>
+                                <Text fontSize="sm" color={textColor}>
+                                  {currentProject.tasks?.filter(task => task.status === 'in progress').length || 0} de {currentProject.tasks?.length || 0}
+                                </Text>
+                              </HStack>
+                            </Box>
+                          </SimpleGrid>
+
+                          <Divider />
+
+                          <Box>
+                            <Text fontSize="sm" color="gray.500" mb={2}>Estado del Proyecto</Text>
+                            <HStack spacing={4}>
+                              <Badge
+                                colorScheme={getStatusColor(currentProject.status)}
+                                variant="subtle"
+                                px={3}
+                                py={1}
+                                borderRadius="full"
+                                fontSize="sm"
+                              >
+                                {currentProject.status === 'completed' ? 'Completado' : 
+                                 currentProject.status === 'in progress' ? 'En progreso' : 'Pendiente'}
+                              </Badge>
+                              <Badge
+                                colorScheme={getPriorityColor(currentProject.priority)}
+                                variant="subtle"
+                                px={3}
+                                py={1}
+                                borderRadius="full"
+                                fontSize="sm"
+                              >
+                                Prioridad {currentProject.priority === 'high' ? 'Alta' :
+                                          currentProject.priority === 'medium' ? 'Media' : 'Baja'}
+                              </Badge>
+                            </HStack>
+                          </Box>
+                        </VStack>
+                      </Box>
+                    </VStack>
                   </GridItem>
                 </Grid>
               </TabPanel>
               
               <TabPanel>
-                <Text>Lista de tareas del proyecto</Text>
-              </TabPanel>
-              
-              <TabPanel>
                 <KanbanBoard projectId={Number(projectId)} />
-              </TabPanel>
-              
-              <TabPanel>
-                <Text>Miembros del equipo del proyecto</Text>
               </TabPanel>
             </TabPanels>
           </Tabs>
         </CardBody>
       </Card>
 
-      <Modal isOpen={isOpen} onClose={onClose}>
-        <ModalOverlay backdropFilter="blur(2px)" />
-        <ModalContent 
-          bg={cardBg} 
-          borderColor={borderColor}
-          borderRadius="xl"
-          boxShadow="xl"
-        >
-          <ModalHeader borderBottomWidth="1px" borderColor={borderColor}>
-            <HStack spacing={2}>
-              <Icon as={FiTrash2} color="red.500" />
-              <Text>Confirmar eliminación</Text>
-            </HStack>
-          </ModalHeader>
+      {/* Modales */}
+      <ProjectUsersModal
+        isOpen={isUsersModalOpen}
+        onClose={onUsersModalClose}
+        projectId={Number(projectId)}
+        onUsersUpdated={() => {
+          if (projectId) {
+            refreshProject();
+          }
+        }}
+      />
+
+      <EditProjectModal
+        isOpen={isEditModalOpen}
+        onClose={() => setIsEditModalOpen(false)}
+        project={currentProject}
+        onProjectUpdated={handleProjectUpdated}
+      />
+
+      {/* Modal de Confirmación de Eliminación */}
+      <Modal isOpen={isDeleteModalOpen} onClose={onDeleteModalClose}>
+        <ModalOverlay />
+        <ModalContent>
+          <ModalHeader>Confirmar Eliminación</ModalHeader>
           <ModalCloseButton />
-          <ModalBody py={6}>
-            ¿Estás seguro de que quieres eliminar este proyecto? Esta acción no se puede deshacer.
+          <ModalBody>
+            <VStack spacing={4} align="stretch">
+              <Text>¿Estás seguro de que deseas eliminar este proyecto?</Text>
+              <Text fontSize="sm" color="red.500">
+                Esta acción no se puede deshacer. Se eliminarán todas las tareas y datos asociados al proyecto.
+              </Text>
+            </VStack>
           </ModalBody>
-          <ModalFooter borderTopWidth="1px" borderColor={borderColor}>
-            <Button 
-              variant="ghost" 
-              mr={3} 
-              onClick={onClose}
-              _hover={{ bg: 'gray.100' }}
-            >
+          <ModalFooter>
+            <Button variant="ghost" mr={3} onClick={onDeleteModalClose}>
               Cancelar
             </Button>
             <Button 
               colorScheme="red" 
-              onClick={handleDeleteProject}
-              _hover={{ transform: 'translateY(-1px)', boxShadow: 'md' }}
-              transition="all 0.2s"
+              onClick={() => {
+                handleDeleteProject();
+                onDeleteModalClose();
+              }}
             >
-              Eliminar
+              Eliminar Proyecto
             </Button>
           </ModalFooter>
         </ModalContent>
       </Modal>
-
-      <ProjectUsersModal
-        isOpen={isUsersModalOpen}
-        onClose={onUsersModalClose}
-        projectId={project.id}
-        onUsersUpdated={refreshProject}
-      />
     </Container>
   );
 };
 
-export default ProjectDetail;
+export default ProjectDetails;

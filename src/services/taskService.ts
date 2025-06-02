@@ -135,7 +135,6 @@ export const updateTask = async (taskId: number, taskData: Partial<Task>): Promi
             throw new Error('No hay token de autenticación');
         }
 
-
         const validStatuses = ['pending', 'in progress', 'completed'];
         if (taskData.status && !validStatuses.includes(taskData.status)) {
             console.error('Status inválido:', {
@@ -145,7 +144,6 @@ export const updateTask = async (taskId: number, taskData: Partial<Task>): Promi
             });
             throw new Error(`Status inválido. Debe ser uno de: ${validStatuses.join(', ')}`);
         }
-
 
         const dataToSend = {
             title: taskData.title,
@@ -193,6 +191,15 @@ export const updateTask = async (taskId: number, taskData: Partial<Task>): Promi
                     data: error.config?.data
                 }
             });
+
+            if (error.response?.status === 401 || error.response?.status === 403) {
+                throw new Error('No tienes permisos para actualizar esta tarea');
+            }
+
+            if (error.response?.status === 422) {
+                throw new Error(error.response.data.message || 'Error de validación al actualizar la tarea');
+            }
+
             throw new Error(error.response?.data?.message || 'Error al actualizar la tarea');
         }
         throw error;

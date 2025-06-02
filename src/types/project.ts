@@ -7,7 +7,7 @@ export interface Project {
   description: string;
   start_date: string;
   end_date: string;
-  status: 'active' | 'completed' | 'in progress';
+  status: 'pending' | 'in progress' | 'completed';
   priority: 'low' | 'medium' | 'high';
   progress: number;
   user_id: number;

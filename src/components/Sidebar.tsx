@@ -9,10 +9,11 @@ import {
   Icon,
   useColorModeValue,
   Tooltip,
+  Image,
+  HStack,
   Divider
 } from '@chakra-ui/react';
 import {
-  FiHome,
   FiFolder,
   FiBarChart2,
   FiCalendar,
@@ -20,7 +21,6 @@ import {
   FiSettings,
   FiBell,
   FiCheckSquare,
-  FiClock
 } from 'react-icons/fi';
 
 interface SidebarProps {
@@ -42,14 +42,9 @@ const Sidebar: React.FC<SidebarProps> = ({ collapsed }) => {
       label: 'Proyectos'
     },
     {
-      path: '/tasks',
-      icon: FiCheckSquare,
-      label: 'Tareas'
-    },
-    {
       path: '/timeline',
-      icon: FiClock,
-      label: 'Línea de Tiempo'
+      icon: FiCheckSquare,
+      label: 'Tareas Asignadas'
     },
     {
       path: '/calendar',
@@ -105,11 +100,16 @@ const Sidebar: React.FC<SidebarProps> = ({ collapsed }) => {
         borderBottomColor={borderColor}
       >
         {collapsed ? (
-          <Icon as={FiHome} fontSize="24px" color={primaryColor} />
+          <Image src="/logo.svg" alt="MetriTask Icon" boxSize="32px" />
         ) : (
-          <Heading size="md" color={primaryColor}>MetriTask</Heading>
+          <HStack spacing={3}>
+            <Image src="/logo.svg" alt="MetriTask Icon" boxSize="32px" />
+            <Heading size="md" color={primaryColor}>MetriTask</Heading>
+          </HStack>
         )}
       </Flex>
+
+
 
       <Divider borderColor={borderColor} display={collapsed ? "none" : "block"} />
 

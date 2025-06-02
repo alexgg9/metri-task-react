@@ -8,15 +8,11 @@ import {
   Flex,
   Icon,
   useColorModeValue,
-  Tooltip,
   Divider,
   Avatar,
-  AvatarBadge
 } from '@chakra-ui/react';
-import { FiCalendar, FiUser, FiClock, FiCheckCircle } from 'react-icons/fi';
+import { FiCalendar, FiClock, FiCheckCircle } from 'react-icons/fi';
 import { Task } from '../../types/task';
-import { format } from 'date-fns';
-import { es } from 'date-fns/locale';
 
 interface KanbanCardProps {
   task: Task;
