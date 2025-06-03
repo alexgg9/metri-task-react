@@ -68,10 +68,17 @@ import ProjectUsersModal from './ProjectUsersModal';
 import EditProjectModal from './EditProjectModal';
 
 const ProjectDetails: React.FC = () => {
+  // 1. Hooks de React Router
   const { projectId } = useParams<{ projectId: string }>();
-  const { currentProject, loading, refreshProject } = useProject();
-  const { user } = useAuth();
   const navigate = useNavigate();
+
+  // 2. Hooks de estado
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [isAddTaskModalOpen, setIsAddTaskModalOpen] = useState(false);
+  const [isAddUserModalOpen, setIsAddUserModalOpen] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // 3. Hooks de Chakra UI
   const toast = useToast();
   const cardBg = useColorModeValue('white', 'gray.700');
   const textColor = useColorModeValue('gray.800', 'white');
@@ -79,12 +86,13 @@ const ProjectDetails: React.FC = () => {
   const borderColor = useColorModeValue('gray.200', 'gray.600');
   const hoverBg = useColorModeValue('gray.50', 'gray.600');
   const { isOpen: isUsersModalOpen, onOpen: onUsersModalOpen, onClose: onUsersModalClose } = useDisclosure();
-  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-  const [isAddTaskModalOpen, setIsAddTaskModalOpen] = useState(false);
-  const [isAddUserModalOpen, setIsAddUserModalOpen] = useState(false);
   const { isOpen: isDeleteModalOpen, onOpen: onDeleteModalOpen, onClose: onDeleteModalClose } = useDisclosure();
-  const [isSubmitting, setIsSubmitting] = useState(false);
 
+  // 4. Hooks de contexto
+  const { currentProject, loading, refreshProject } = useProject();
+  const { user } = useAuth();
+
+  // 5. Cálculos derivados
   const isProjectCreator = user && currentProject && (currentProject.creator?.id === user.id || currentProject.user_id === user.id);
   const isAdmin = user?.role === 'admin';
 
@@ -185,6 +193,15 @@ const ProjectDetails: React.FC = () => {
       refreshProject();
     }
   }, [projectId, refreshProject]);
+
+  const renderMemberAvatar = (member: User) => (
+    <Avatar
+      size="sm"
+      name={member.name}
+      src={member.avatar || undefined}
+      bg={useColorModeValue('gray.100', 'gray.600')}
+    />
+  );
 
   if (loading) {
     return (
@@ -441,35 +458,38 @@ const ProjectDetails: React.FC = () => {
                               </Flex>
                               <Divider />
                               {currentProject.users && currentProject.users.length > 0 ? (
-                                <SimpleGrid columns={{ base: 2, md: 3, lg: 4 }} spacing={6}>
-                                  {currentProject.users.map((member: User, index: number) => (
-                                    <Box
-                                      key={index}
-                                      p={4}
-                                      bg={useColorModeValue('gray.50', 'gray.600')}
-                                      borderRadius="lg"
-                                      _hover={{ transform: 'translateY(-2px)', shadow: 'md' }}
-                                      transition="all 0.2s"
-                                    >
-                                      <VStack spacing={3}>
+                                <Box>
+                                  <Text fontSize="sm" color={textColor} mb={2}>
+                                    Miembros del equipo
+                                  </Text>
+                                  <SimpleGrid columns={{ base: 2, md: 3 }} spacing={4}>
+                                    {currentProject.users.map((user) => (
+                                      <Flex
+                                        key={user.id}
+                                        align="center"
+                                        p={2}
+                                        borderRadius="md"
+                                        _hover={{ bg: hoverBg }}
+                                        transition="all 0.2s"
+                                      >
                                         <Avatar
-                                          size="md"
-                                          name={member.name}
-                                          src={member.avatar}
-                                          bg="purple.500"
+                                          size="sm"
+                                          name={user.name}
+                                          src={user.avatar || undefined}
+                                          mr={2}
                                         />
-                                        <VStack spacing={1} align="center">
-                                          <Text fontSize="sm" color={textColor} fontWeight="medium" noOfLines={1}>
-                                            {member.name}
+                                        <Box>
+                                          <Text fontSize="sm" fontWeight="medium" color={textColor}>
+                                            {user.name}
                                           </Text>
-                                          <Text fontSize="xs" color="gray.500" noOfLines={1}>
-                                            {member.email}
+                                          <Text fontSize="xs" color={textColor}>
+                                            {user.role}
                                           </Text>
-                                        </VStack>
-                                      </VStack>
-                                    </Box>
-                                  ))}
-                                </SimpleGrid>
+                                        </Box>
+                                      </Flex>
+                                    ))}
+                                  </SimpleGrid>
+                                </Box>
                               ) : (
                                 <Center py={8}>
                                   <VStack spacing={3}>

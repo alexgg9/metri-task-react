@@ -3,19 +3,16 @@ import { Routes, Route, Navigate, useParams, Outlet } from 'react-router-dom';
 import ProjectList from './components/projects/ProjectList';
 import ProjectDetail from './components/projects/ProjectDetails';
 import CreateProject from './components/projects/CreateProject';
-import Login from './components/auth/Login';
-import Register from './components/auth/Register';
-import Dashboard from './components/dashboard/Dashboard';
-import Profile from './components/profile/Profile';
-import NotFound from './components/common/NotFound';
 import KanbanBoard from './components/kanban/KanbanBoard'; 
 import PrivateRoute from './components/PrivateRoute'; 
 import PublicRoute from './components/PublicRoute';
-import AuthPage from './pages/AuthPage.tsx'; 
+import AuthPage from './pages/AuthPage'; 
 import UnauthorizedPage from './pages/UnauthorizedPage';
 import ProfilePage from './components/user/ProfileUser';
 import LandingPage from './pages/Landing';
 import TaskTimelinePage from './pages/TaskTimelinePage';
+import ProjectStats from './components/statistics/ProjectStats';
+import NotFound from './components/NotFound';
 import { ChakraProvider, ColorModeScript, extendTheme } from '@chakra-ui/react';
 import { AuthProvider } from './contexts/AuthContext';
 import { ProjectProvider } from './contexts/ProjectContext';
@@ -71,7 +68,13 @@ const App: React.FC = () => {
               <Route path="/projects/:projectId/kanban" element={<KanbanBoardWrapper />} />
               <Route path="/profile" element={<ProfilePage />} />
               <Route path="/timeline" element={<TaskTimelinePage />} />
+              <Route path="/statistics" element={<ProjectStats />} />
+              <Route path="/project-stats" element={<ProjectStats />} />
+              <Route path="/404" element={<NotFound />} />
             </Route>
+
+            {/* Redirigir cualquier otra ruta a /projects */}
+            <Route path="*" element={<Navigate to="/404" replace />} />
           </Routes>
         </ProjectProvider>
       </AuthProvider>

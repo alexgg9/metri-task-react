@@ -15,7 +15,7 @@ import {
   Heading,
   HStack
 } from '@chakra-ui/react';
-import { FiCalendar, FiClock, FiCheckCircle, FiAlertCircle } from 'react-icons/fi';
+import { FiCalendar, FiCheckCircle } from 'react-icons/fi';
 import { Task } from '../../types/task';
 import { getUserTasks } from '../../services/taskService';
 import { format } from 'date-fns';
@@ -101,7 +101,7 @@ const TaskTimeline: React.FC = () => {
   return (
     <Box p={4}>
       <Heading size="lg" mb={6} color={textColor}>
-        Línea de Tiempo de Tareas
+        Tareas Asignadas
       </Heading>
       <VStack spacing={4} align="stretch">
         {tasks.map((task, index) => (
