@@ -40,7 +40,7 @@ export default function AuthForms() {
         console.log('Login exitoso:', response);
         
         if (response.user) {
-          console.log('Usuario obtenido, actualizando contexto...');
+          console.log('Usuario obtenido, actualizando contexto...', response.user);
           setUser(response.user);
           console.log('Redirigiendo a /projects...');
           navigate("/projects", { replace: true });
@@ -53,12 +53,19 @@ export default function AuthForms() {
           setLoading(false);
           return;
         }
-        await register(name, email, password, role);
-        setIsLogin(true);
-        resetFields();
+        console.log('Registrando usuario con rol:', role);
+        const response = await register(name, email, password, role);
+        console.log('Registro exitoso:', response);
+        
+        // Después del registro exitoso, hacer login automáticamente
+        const loginResponse = await login(email, password);
+        if (loginResponse.user) {
+          setUser(loginResponse.user);
+          navigate("/projects", { replace: true });
+        }
       }
     } catch (err: any) {
-      console.error('Error en el login:', err);
+      console.error('Error en el proceso:', err);
       setError(err.response?.data?.message || (isLogin ? "Credenciales incorrectas." : "Error al registrar. Verifica los datos."));
     } finally {
       setLoading(false);
