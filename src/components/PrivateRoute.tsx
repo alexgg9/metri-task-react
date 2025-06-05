@@ -1,7 +1,7 @@
 import React, { JSX } from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import { Box, Spinner, Center } from '@chakra-ui/react';
+import { Box, Spinner } from '@chakra-ui/react';
 
 interface PrivateRouteProps {
   children: JSX.Element;
@@ -9,7 +9,7 @@ interface PrivateRouteProps {
 }
 
 const PrivateRoute: React.FC<PrivateRouteProps> = ({ children, requiredPermission }) => {
-  const { user, loading, hasPermission } = useAuth();
+  const { user, loading } = useAuth();
   const location = useLocation();
 
   console.log('PrivateRoute - Estado actual:', {
@@ -43,7 +43,7 @@ const PrivateRoute: React.FC<PrivateRouteProps> = ({ children, requiredPermissio
     return <Navigate to="/auth" state={{ from: location }} replace />;
   }
 
-  if (requiredPermission && !hasPermission(requiredPermission)) {
+  if (requiredPermission && user.role !== requiredPermission) {
     console.log('PrivateRoute - Redirigiendo a unauthorized por falta de permisos');
     return <Navigate to="/unauthorized" replace />;
   }

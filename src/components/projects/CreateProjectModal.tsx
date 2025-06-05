@@ -36,6 +36,7 @@ const CreateProjectModal: React.FC<CreateProjectModalProps> = ({
   onClose,
   onProjectCreated
 }) => {
+  // 1. Hooks de estado
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
   const [priority, setPriority] = useState('medium');
@@ -43,13 +44,16 @@ const CreateProjectModal: React.FC<CreateProjectModalProps> = ({
   const [endDate, setEndDate] = useState('');
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
-  const toast = useToast();
-  const { user } = useAuth();
 
+  // 2. Hooks de Chakra UI
+  const toast = useToast();
   const bgColor = useColorModeValue('white', 'gray.800');
   const borderColor = useColorModeValue('gray.200', 'gray.600');
   const inputBg = useColorModeValue('gray.50', 'gray.700');
   const inputBorder = useColorModeValue('gray.200', 'gray.600');
+
+  // 3. Hooks de contexto
+  const { user } = useAuth();
 
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
@@ -90,7 +94,7 @@ const CreateProjectModal: React.FC<CreateProjectModalProps> = ({
         priority: priority as 'low' | 'medium' | 'high',
         start_date: startDate,
         end_date: endDate,
-        status: 'active',
+        status: 'in progress' as const,
         progress: 0,
         user_id: user.id
       };

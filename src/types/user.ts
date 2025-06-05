@@ -8,6 +8,7 @@ export interface User {
     address: string;
     birthdate: string;
     role: 'admin' | 'manager' | 'member';
+    created_at: string;
 
 }
 

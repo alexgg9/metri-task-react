@@ -1,8 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   Box,
   Button,
-  HStack,
   useDisclosure,
   useColorModeValue,
   Text,
@@ -15,11 +14,10 @@ import {
   GridItem,
   InputGroup,
   InputLeftElement,
-  Input,
   Container,
   Spinner
 } from '@chakra-ui/react';
-import { FiPlus, FiFilter, FiCalendar, FiFlag, FiClock, FiArrowUp } from 'react-icons/fi';
+import { FiPlus, FiFilter, FiCalendar, FiFlag, FiArrowUp } from 'react-icons/fi';
 import { getProjects } from '../../services/projectService';
 import CreateProjectModal from './CreateProjectModal';
 import { Project } from '@/types/project';
@@ -29,6 +27,7 @@ import ProjectListContent from './ProjectListContent';
 const ITEMS_PER_PAGE = 8;
 
 const ProjectList: React.FC = () => {
+  // 1. Hooks de estado
   const [allProjects, setAllProjects] = useState<Project[]>([]);
   const [filteredProjects, setFilteredProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(true);
@@ -39,13 +38,28 @@ const ProjectList: React.FC = () => {
   const [priorityFilter, setPriorityFilter] = useState('all');
   const [dateFilter, setDateFilter] = useState('all');
 
+  // 2. Hooks de Chakra UI
   const { isOpen, onOpen, onClose } = useDisclosure();
-  const bgColor = useColorModeValue('white', 'gray.800');
   const borderColor = useColorModeValue('gray.200', 'gray.600');
   const textColor = useColorModeValue('gray.600', 'gray.300');
 
+  // 3. Hooks de contexto
   const { user } = useAuth();
 
+  // 4. Callbacks
+  const handleProjectCreated = useCallback(async () => {
+    setLoading(true);
+    const response = await getProjects();
+    const userProjects = response.filter(project =>
+      project.creator?.id === user?.id ||
+      project.users?.some(u => u.id === user?.id) ||
+      project.user_id === user?.id
+    );
+    setAllProjects(userProjects);
+    setLoading(false);
+  }, [user]);
+
+  // 5. Efectos
   useEffect(() => {
     let isMounted = true;
 
@@ -132,50 +146,16 @@ const ProjectList: React.FC = () => {
 
     setFilteredProjects(filtered);
     setTotalPages(Math.ceil(filtered.length / ITEMS_PER_PAGE));
-    setCurrentPage(1); // Reiniciar a la página 1
+    setCurrentPage(1);
   }, [allProjects, statusFilter, priorityFilter, dateFilter, sortBy]);
 
+  // 6. Cálculos derivados
   const paginatedProjects = filteredProjects.slice(
     (currentPage - 1) * ITEMS_PER_PAGE,
     currentPage * ITEMS_PER_PAGE
   );
 
-  const handleProjectCreated = async () => {
-    setLoading(true);
-    const response = await getProjects();
-    const userProjects = response.filter(project =>
-      project.creator?.id === user?.id ||
-      project.users?.some(u => u.id === user?.id) ||
-      project.user_id === user?.id
-    );
-    setAllProjects(userProjects);
-    setLoading(false);
-  };
-
-  const renderNoProjectsMessage = () => (
-    <VStack spacing={6} align="center" justify="center" minH="60vh">
-      <Heading size="lg" color={textColor}>
-        {allProjects.length === 0 ? 'No tienes proyectos' : 'No hay resultados'}
-      </Heading>
-      <Text color={textColor} textAlign="center">
-        {allProjects.length === 0
-          ? 'No tienes ningún proyecto asignado o creado.\nCrea un nuevo proyecto o pide que te asignen uno.'
-          : 'No se encontraron proyectos que coincidan con los filtros aplicados.'}
-      </Text>
-      <Button
-        leftIcon={<Icon as={FiPlus} />}
-        colorScheme="blue"
-        size="lg"
-        onClick={onOpen}
-        _hover={{ transform: 'translateY(-2px)', boxShadow: 'lg' }}
-        transition="all 0.2s"
-      >
-        Crear Proyecto
-      </Button>
-      <CreateProjectModal isOpen={isOpen} onClose={onClose} onProjectCreated={handleProjectCreated} />
-    </VStack>
-  );
-
+  // 7. Renderizado condicional
   if (loading) {
     return (
       <Container maxW="container.xl" py={10}>
@@ -192,32 +172,18 @@ const ProjectList: React.FC = () => {
     );
   }
 
+  // 8. Renderizado principal
   return (
     <Box>
-      <Box
-        position="sticky"
-        top="0"
-        zIndex="1"
-        borderBottomWidth="1px"
-        borderColor={borderColor}
-        mb={6}
-        py={2}
-        px={6}
-        boxShadow="sm"
-        backdropFilter="blur(10px)"
-        bg={useColorModeValue('rgba(255, 255, 255, 0.9)', 'rgba(26, 32, 44, 0.9)')}
-      >
-        <VStack spacing={2} align="stretch">
+      <Box px={8} py={6}>
+        <VStack spacing={6} align="stretch">
           <Flex justify="space-between" align="center">
-            <Heading size="md" color={useColorModeValue('gray.700', 'white')}>
-              Mis Proyectos
-            </Heading>
+            <Heading size="lg">Mis Proyectos</Heading>
             <Button
               leftIcon={<Icon as={FiPlus} />}
               colorScheme="blue"
-              size="sm"
               onClick={onOpen}
-              _hover={{ transform: 'translateY(-1px)', boxShadow: 'md' }}
+              _hover={{ transform: 'translateY(-2px)', boxShadow: 'lg' }}
               transition="all 0.2s"
             >
               Nuevo Proyecto
@@ -325,10 +291,27 @@ const ProjectList: React.FC = () => {
       </Box>
 
       <Box px={8} pt={4}>
-        {loading ? (
-          <Text>Cargando...</Text>
-        ) : paginatedProjects.length === 0 ? (
-          renderNoProjectsMessage()
+        {paginatedProjects.length === 0 ? (
+          <VStack spacing={6} align="center" justify="center" minH="60vh">
+            <Heading size="lg" color={textColor}>
+              {allProjects.length === 0 ? 'No tienes proyectos' : 'No hay resultados'}
+            </Heading>
+            <Text color={textColor} textAlign="center">
+              {allProjects.length === 0
+                ? 'No tienes ningún proyecto asignado o creado.\nCrea un nuevo proyecto o pide que te asignen uno.'
+                : 'No se encontraron proyectos que coincidan con los filtros aplicados.'}
+            </Text>
+            <Button
+              leftIcon={<Icon as={FiPlus} />}
+              colorScheme="blue"
+              size="lg"
+              onClick={onOpen}
+              _hover={{ transform: 'translateY(-2px)', boxShadow: 'lg' }}
+              transition="all 0.2s"
+            >
+              Crear Proyecto
+            </Button>
+          </VStack>
         ) : (
           <>
             <ProjectListContent 

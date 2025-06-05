@@ -4,7 +4,6 @@ import {
   CardBody,
   Heading,
   Divider,
-  StatGroup,
   Stat,
   StatLabel,
   StatNumber,
@@ -15,7 +14,6 @@ import {
   Progress,
   Text,
   VStack,
-  Box
 } from '@chakra-ui/react';
 import { 
   FiCheckCircle, 

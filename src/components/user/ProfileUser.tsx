@@ -13,7 +13,6 @@ import { getCurrentUser } from '../../services/userService';
 import { getProjects } from '../../services/projectService';
 import { getTasks } from '../../services/taskService';
 import { User, UserUpdate } from '@/types/user';
-import { Project } from '@/types/project';
 import UserProfileCard from './UserProfileCard';
 import UserInfoForm from './UserInfoForm';
 import UserStatsCard from './UserStatsCard';
@@ -24,7 +23,7 @@ const ProfileUser: React.FC = () => {
   const [formData, setFormData] = useState<UserUpdate>({
     password: '' 
   });
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const [userStats, setUserStats] = useState({
     projectsCompleted: 0,
     tasksCompleted: 0,
@@ -37,9 +36,14 @@ const ProfileUser: React.FC = () => {
   const toast = useToast();
 
   useEffect(() => {
-    const fetchUserData = async () => {
+    const fetchAllData = async () => {
+      setIsLoading(true);
       try {
+
         const userData = await getCurrentUser();
+        if (!userData) {
+          throw new Error('No se pudo obtener la información del usuario');
+        }
         setUser(userData);
         setFormData(userData);
         
@@ -49,96 +53,85 @@ const ProfileUser: React.FC = () => {
           month: 'short',
           year: 'numeric'
         });
+
+        const [projects, tasks] = await Promise.all([
+          getProjects(),
+          getTasks()
+        ]);
+
+        const userProjects = Array.isArray(projects) 
+          ? projects.filter(project => 
+              (project.users && project.users.some(u => u.id === userData.id)) ||
+              (project.creator && project.creator.id === userData.id) ||
+              project.user_id === userData.id
+            )
+          : [];
         
-        await fetchUserStats(userData.id, formattedDate);
+        const completedProjects = userProjects.filter(project => 
+          project.status && (
+            project.status.toLowerCase().includes('complet') || 
+            project.status.toLowerCase().includes('done') || 
+            project.status.toLowerCase().includes('termin')
+          )
+        ).length;
+        
+        const inProgressProjects = userProjects.length - completedProjects;
+  
+        const userTasks = Array.isArray(tasks) 
+          ? tasks.filter(task => {
+              if (!task) return false;
+              const isAssigned = task.assigned_to && task.assigned_to.id === userData.id;
+              const isCreator = task.created_by && task.created_by.id === userData.id;
+              return isAssigned || isCreator;
+            })
+          : [];
+        
+        // Calcular estadísticas de tareas
+        const completedTasks = userTasks.filter(task => 
+          task && task.status && (
+            task.status.toLowerCase().includes('complet') || 
+            task.status.toLowerCase().includes('done') || 
+            task.status.toLowerCase().includes('termin')
+          )
+        ).length;
+        
+        const totalProjects = userProjects.length;
+        const totalTasks = userTasks.length;
+        const pendingTasks = totalTasks - completedTasks;
+        
+
+        setUserStats({
+          projectsCompleted: completedProjects,
+          tasksCompleted: completedTasks,
+          projectsInProgress: inProgressProjects,
+          totalProjects,
+          totalTasks,
+          pendingTasks,
+          joinDate: formattedDate
+        });
+        
       } catch (error) {
-        console.error('Error al obtener datos del usuario:', error);
+        console.error('Error al cargar datos del perfil:', error);
         toast({
           title: 'Error',
-          description: 'No se pudieron cargar los datos del usuario',
+          description: 'No se pudieron cargar los datos del perfil',
           status: 'error',
           duration: 3000,
           isClosable: true,
         });
+      } finally {
+        setIsLoading(false);
       }
     };
 
-    fetchUserData();
+    fetchAllData();
   }, [toast]);
-
-  const fetchUserStats = async (userId: number, joinDate: string) => {
-    try {
-      const projects: Project[] = await getProjects();
-      
-      const userProjects = Array.isArray(projects) 
-        ? projects.filter(project => 
-            (project.users && project.users.some(u => u.id === userId)) ||
-            (project.creator && project.creator.id === userId) ||
-            project.user_id === userId
-          )
-        : [];
-      
-      const completedProjects = userProjects.filter(project => 
-        project.status && (
-          project.status.toLowerCase().includes('complet') || 
-          project.status.toLowerCase().includes('done') || 
-          project.status.toLowerCase().includes('termin')
-        )
-      ).length;
-      
-      const inProgressProjects = userProjects.length - completedProjects;
-  
-      const tasksResponse = await getTasks();
-      const tasks = Array.isArray(tasksResponse) ? tasksResponse : [];
-      
-      const userTasks = tasks.filter(task => {
-        if (!task) return false;
-        
-        // Verificar si el usuario está asignado a la tarea
-        const isAssigned = task.assigned_to && task.assigned_to.id === userId;
-        
-        // Verificar si el usuario es el creador de la tarea
-        const isCreator = task.created_by && task.created_by.id === userId;
-        
-        return isAssigned || isCreator;
-      });
-      
-      const completedTasks = userTasks.filter(task => 
-        task && task.status && (
-          task.status.toLowerCase().includes('complet') || 
-          task.status.toLowerCase().includes('done') || 
-          task.status.toLowerCase().includes('termin')
-        )
-      ).length;
-      
-      const totalProjects = userProjects.length;
-      const totalTasks = userTasks.length;
-      const pendingTasks = totalTasks - completedTasks;
-      
-      setUserStats({
-        projectsCompleted: completedProjects,
-        tasksCompleted: completedTasks,
-        projectsInProgress: inProgressProjects,
-        totalProjects,
-        totalTasks,
-        pendingTasks,
-        joinDate
-      });
-      
-    } catch (error) {
-      console.error('Error al obtener estadísticas:', error);
-      setUserStats(prev => ({
-        ...prev,
-        joinDate
-      }));
-    }
-  };
 
   const handleUserUpdate = (updatedUser: User) => {
     setUser(updatedUser);
   };
 
-  if (!user) {
+  if (isLoading) {
     return (
       <Container maxW="container.lg" py={10}>
         <Center h="50vh" flexDirection="column" gap={4}>
@@ -151,6 +144,18 @@ const ProfileUser: React.FC = () => {
           />
           <Text fontSize="lg" color="gray.500" mt={2}>
             Cargando perfil...
+          </Text>
+        </Center>
+      </Container>
+    );
+  }
+
+  if (!user) {
+    return (
+      <Container maxW="container.lg" py={10}>
+        <Center h="50vh" flexDirection="column" gap={4}>
+          <Text fontSize="lg" color="red.500">
+            No se pudo cargar el perfil del usuario
           </Text>
         </Center>
       </Container>

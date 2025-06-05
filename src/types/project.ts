@@ -1,25 +1,37 @@
-import { Task } from './task';
-import { User } from './user';
+
+export type ProjectStatus = 'pending' | 'in progress' | 'completed';
 
 export interface Project {
   id: number;
   name: string;
   description: string;
-  start_date: string;
-  end_date: string;
-  status: 'pending' | 'in progress' | 'completed';
+  status: ProjectStatus;
   priority: 'low' | 'medium' | 'high';
   progress: number;
+  start_date: string;
+  end_date?: string;
+  created_at: string;
+  updated_at: string;
   user_id: number;
-  created_at?: string;
-  updated_at?: string;
   creator?: {
     id: number;
     name: string;
     email: string;
+    avatar?: string;
   };
-  tasks?: Task[];
-  users?: User[];
+  users?: Array<{
+    id: number;
+    name: string;
+    email: string;
+    avatar?: string;
+    role: string;
+  }>;
+  tasks?: Array<{
+    id: number;
+    title: string;
+    status: string;
+    priority: 'low' | 'medium' | 'high';
+  }>;
 }
 
 export const PROJECT_ROLES = {
