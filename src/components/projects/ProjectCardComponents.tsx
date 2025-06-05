@@ -102,10 +102,11 @@ export const ProjectCardTags: React.FC<ProjectComponentProps> = ({ project }) =>
 export const ProjectCardStatus: React.FC<ProjectComponentProps> = ({ project }) => {
   // Colores para estados
   const statusColors = {
-    completed: { bg: useColorModeValue('green.50', 'green.900'), color: 'green.500' },
-    'in progress': { bg: useColorModeValue('blue.50', 'blue.900'), color: 'blue.500' },
-    active: { bg: useColorModeValue('yellow.50', 'yellow.900'), color: 'yellow.500' }
-  };
+    'completed': { bg: 'green.100', color: 'green.800' },
+    'in progress': { bg: 'blue.100', color: 'blue.800' },
+    'pending': { bg: 'orange.100', color: 'orange.800' },
+    'active': { bg: 'purple.100', color: 'purple.800' }
+  } as const;
   
   const priorityColors = {
     high: { 

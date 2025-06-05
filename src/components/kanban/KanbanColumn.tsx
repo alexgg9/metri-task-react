@@ -40,18 +40,6 @@ const KanbanColumn: React.FC<KanbanColumnProps> = ({
   const defaultBorderColor = useColorModeValue('gray.200', 'gray.600');
   const textColor = useColorModeValue('gray.700', 'white');
 
-  const getColumnColor = (status: string) => {
-    switch (status) {
-      case 'pending':
-        return 'orange';
-      case 'in progress':
-        return 'blue';
-      case 'completed':
-        return 'green';
-      default:
-        return 'gray';
-    }
-  };
 
   return (
     <Box

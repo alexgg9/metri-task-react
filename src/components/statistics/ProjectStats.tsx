@@ -11,7 +11,6 @@ import {
   StatLabel,
   StatNumber,
   StatHelpText,
-  StatArrow,
   useColorModeValue,
   Select,
   Flex,
@@ -31,8 +30,6 @@ import {
   PieChart,
   Pie,
   Cell,
-  LineChart,
-  Line,
   XAxis,
   YAxis,
   CartesianGrid,
@@ -40,7 +37,7 @@ import {
   Legend,
   ResponsiveContainer
 } from 'recharts';
-import { FiTrendingUp, FiClock, FiCheckCircle, FiAlertCircle, FiList } from 'react-icons/fi';
+import { FiTrendingUp, FiCheckCircle, FiList } from 'react-icons/fi';
 import { getProjects } from '../../services/projectService';
 import { Project } from '@/types/project';
 import { useAuth } from '../../contexts/AuthContext';
@@ -266,7 +263,7 @@ const ProjectStats: React.FC = () => {
                         dataKey="value"
                         label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
                       >
-                        {stats.statusData.map((entry, index) => (
+                        {stats.statusData.map((_, index) => (
                           <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                         ))}
                       </Pie>
@@ -297,7 +294,7 @@ const ProjectStats: React.FC = () => {
                       />
                       <Legend />
                       <Bar dataKey="value" fill="#3182CE" name="Tareas">
-                        {stats.priorityData.map((entry, index) => (
+                        {stats.priorityData.map((_, index) => (
                           <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                         ))}
                       </Bar>

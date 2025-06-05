@@ -2,7 +2,6 @@ import React, { useState, useEffect, useCallback } from 'react';
 import {
   Box,
   Button,
-  HStack,
   useDisclosure,
   useColorModeValue,
   Text,
@@ -15,11 +14,10 @@ import {
   GridItem,
   InputGroup,
   InputLeftElement,
-  Input,
   Container,
   Spinner
 } from '@chakra-ui/react';
-import { FiPlus, FiFilter, FiCalendar, FiFlag, FiClock, FiArrowUp } from 'react-icons/fi';
+import { FiPlus, FiFilter, FiCalendar, FiFlag, FiArrowUp } from 'react-icons/fi';
 import { getProjects } from '../../services/projectService';
 import CreateProjectModal from './CreateProjectModal';
 import { Project } from '@/types/project';
@@ -42,7 +40,6 @@ const ProjectList: React.FC = () => {
 
   // 2. Hooks de Chakra UI
   const { isOpen, onOpen, onClose } = useDisclosure();
-  const bgColor = useColorModeValue('white', 'gray.800');
   const borderColor = useColorModeValue('gray.200', 'gray.600');
   const textColor = useColorModeValue('gray.600', 'gray.300');
 

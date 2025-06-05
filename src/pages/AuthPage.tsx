@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { login, register } from "../services/authService";
-import { FiUser, FiEye, FiMail, FiLock, FiEyeOff, FiChevronLeft, FiCheckCircle, FiAlertTriangle } from 'react-icons/fi';
+import { FiUser, FiEye, FiMail, FiLock, FiEyeOff, FiChevronLeft, FiAlertTriangle } from 'react-icons/fi';
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
 
