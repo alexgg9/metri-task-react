@@ -175,18 +175,6 @@ export const ProjectProvider: React.FC<{ children: React.ReactNode }> = ({ child
   }, [location.pathname]);
 
 
-  const forceUpdateProject = async (projectId: number) => {
-    setLoading(true);
-    try {
-      const projectData = await getProjectById(projectId);
-      console.log('Forzando actualización del proyecto:', projectData);
-      setCurrentProject(projectData);
-    } catch (error) {
-      console.error('Error al forzar la actualización del proyecto:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
 
   return (
     <ProjectContext.Provider value={{ currentProject, setCurrentProject, loading, refreshProject, error }}>

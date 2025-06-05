@@ -13,7 +13,6 @@ import {
   Input,
   Textarea,
   Select,
-  useToast,
   VStack,
   useColorModeValue,
   Box,
@@ -27,11 +26,11 @@ import {
   NumberDecrementStepper,
   Text
 } from '@chakra-ui/react';
-import { FiCalendar, FiFlag, FiType, FiAlignLeft, FiPercent } from 'react-icons/fi';
-import { updateProject, getProjectById } from '../../services/projectService';
+import { FiType } from 'react-icons/fi';
+import { updateProject } from '../../services/projectService';
 import { Project } from '../../types/project';
 import { useProject } from '../../contexts/ProjectContext';
-import { useAuth } from '../../contexts/AuthContext';
+
 
 interface EditProjectModalProps {
   isOpen: boolean;
@@ -46,11 +45,9 @@ const EditProjectModal: React.FC<EditProjectModalProps> = ({
   project,
   onProjectUpdated
 }) => {
-  const toast = useToast();
   const bgColor = useColorModeValue('white', 'gray.800');
   const borderColor = useColorModeValue('gray.200', 'gray.600');
   const { refreshProject } = useProject();
-  const { user } = useAuth();
 
   const [formData, setFormData] = useState<Partial<Project>>({
     name: '',
@@ -165,7 +162,7 @@ const EditProjectModal: React.FC<EditProjectModalProps> = ({
 
               <FormControl isRequired>
                 <FormLabel>Estado</FormLabel>
-                <Select value={formData.status} onChange={(e) => setFormData({ ...formData, status: e.target.value })}>
+                <Select value={formData.status} onChange={(e) => setFormData({ ...formData, status: e.target.value as "pending" | "in progress" | "completed" })}>
                   <option value="pending">Pendiente</option>
                   <option value="active">Activo</option>
                   <option value="in progress">En progreso</option>
@@ -175,7 +172,7 @@ const EditProjectModal: React.FC<EditProjectModalProps> = ({
 
               <FormControl isRequired>
                 <FormLabel>Prioridad</FormLabel>
-                <Select value={formData.priority} onChange={(e) => setFormData({ ...formData, priority: e.target.value })}>
+                <Select value={formData.priority} onChange={(e) => setFormData({ ...formData, priority: e.target.value as "low" | "medium" | "high" })}>
                   <option value="low">Baja</option>
                   <option value="medium">Media</option>
                   <option value="high">Alta</option>

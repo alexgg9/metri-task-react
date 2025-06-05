@@ -1,5 +1,5 @@
 import React from 'react';
-import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import {
   Box,
   Button,
@@ -29,9 +29,8 @@ interface TopbarProps {
 
 const Topbar: React.FC<TopbarProps> = ({ collapsed, toggleCollapsed }) => {
   const location = useLocation();
-  const navigate = useNavigate();
   const { colorMode, toggleColorMode } = useColorMode();
-  const { user, setUser } = useAuth();
+  const { user } = useAuth();
   const { currentProject, loading } = useProject();
   
   const bgColor = useColorModeValue('white', 'gray.800');

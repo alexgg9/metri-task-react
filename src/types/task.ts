@@ -16,4 +16,5 @@ export interface Task {
     user_id: number | null;
     assigned_to?: User;
     project?: Project;
+    created_by?: User;
 }

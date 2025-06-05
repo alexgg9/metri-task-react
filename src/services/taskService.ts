@@ -1,6 +1,5 @@
 import axios from "axios";
 import { Task } from "../types/task";
-import { getProjects } from "./projectService";
 import { getCurrentUser } from "./userService";
 
 const API_URL = import.meta.env.VITE_API_URL;

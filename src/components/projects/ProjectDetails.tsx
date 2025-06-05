@@ -1,7 +1,5 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { User } from '../../types/user';
-import { Project } from '../../types/project';
 import {
   Box,
   Container,
@@ -13,7 +11,6 @@ import {
   GridItem,
   Card,
   CardBody,
-  CardHeader,
   HStack,
   VStack,
   Flex,
@@ -36,7 +33,6 @@ import {
   MenuButton,
   MenuList,
   MenuItem,
-  IconButton,
   Center,
   Modal,
   ModalOverlay,
@@ -60,7 +56,7 @@ import {
   FiTrash2,
   FiUserPlus
 } from 'react-icons/fi';
-import { getProjectById, deleteProject } from '../../services/projectService';
+import { deleteProject } from '../../services/projectService';
 import KanbanBoard from '../kanban/KanbanBoard';
 import { useProject } from '../../contexts/ProjectContext';
 import { useAuth } from '../../contexts/AuthContext';
@@ -74,9 +70,6 @@ const ProjectDetails: React.FC = () => {
 
   // 2. Hooks de estado
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-  const [isAddTaskModalOpen, setIsAddTaskModalOpen] = useState(false);
-  const [isAddUserModalOpen, setIsAddUserModalOpen] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
 
   // 3. Hooks de Chakra UI
   const toast = useToast();
@@ -166,7 +159,7 @@ const ProjectDetails: React.FC = () => {
     }
   };
 
-  const handleProjectUpdated = async (updatedProject: Project) => {
+  const handleProjectUpdated = async () => {
     try {
       await refreshProject();
       toast({
@@ -194,14 +187,6 @@ const ProjectDetails: React.FC = () => {
     }
   }, [projectId, refreshProject]);
 
-  const renderMemberAvatar = (member: User) => (
-    <Avatar
-      size="sm"
-      name={member.name}
-      src={member.avatar || undefined}
-      bg={useColorModeValue('gray.100', 'gray.600')}
-    />
-  );
 
   if (loading) {
     return (

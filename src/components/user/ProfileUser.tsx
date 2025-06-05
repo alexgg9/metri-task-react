@@ -13,7 +13,6 @@ import { getCurrentUser } from '../../services/userService';
 import { getProjects } from '../../services/projectService';
 import { getTasks } from '../../services/taskService';
 import { User, UserUpdate } from '@/types/user';
-import { Project } from '@/types/project';
 import UserProfileCard from './UserProfileCard';
 import UserInfoForm from './UserInfoForm';
 import UserStatsCard from './UserStatsCard';
@@ -40,7 +39,7 @@ const ProfileUser: React.FC = () => {
     const fetchAllData = async () => {
       setIsLoading(true);
       try {
-        // Obtener datos del usuario
+
         const userData = await getCurrentUser();
         if (!userData) {
           throw new Error('No se pudo obtener la información del usuario');
@@ -48,7 +47,6 @@ const ProfileUser: React.FC = () => {
         setUser(userData);
         setFormData(userData);
         
-        // Formatear fecha de registro
         const joinDate = new Date(userData.created_at || Date.now());
         const formattedDate = joinDate.toLocaleDateString('es-ES', {
           day: '2-digit',
@@ -56,13 +54,11 @@ const ProfileUser: React.FC = () => {
           year: 'numeric'
         });
 
-        // Obtener proyectos y tareas en paralelo
         const [projects, tasks] = await Promise.all([
           getProjects(),
           getTasks()
         ]);
 
-        // Filtrar proyectos del usuario
         const userProjects = Array.isArray(projects) 
           ? projects.filter(project => 
               (project.users && project.users.some(u => u.id === userData.id)) ||
@@ -71,7 +67,6 @@ const ProfileUser: React.FC = () => {
             )
           : [];
         
-        // Calcular estadísticas de proyectos
         const completedProjects = userProjects.filter(project => 
           project.status && (
             project.status.toLowerCase().includes('complet') || 
@@ -82,7 +77,6 @@ const ProfileUser: React.FC = () => {
         
         const inProgressProjects = userProjects.length - completedProjects;
   
-        // Filtrar tareas del usuario
         const userTasks = Array.isArray(tasks) 
           ? tasks.filter(task => {
               if (!task) return false;
@@ -105,7 +99,7 @@ const ProfileUser: React.FC = () => {
         const totalTasks = userTasks.length;
         const pendingTasks = totalTasks - completedTasks;
         
-        // Actualizar estado con todas las estadísticas
+
         setUserStats({
           projectsCompleted: completedProjects,
           tasksCompleted: completedTasks,
